@@ -1,0 +1,20 @@
+{
+  "current_project_path": "/home/alger/workspace/test",
+  "projects_list": [
+    {
+      "path": "/home/alger/workspace/test",
+      "name": "test"
+    }
+  ],
+  "global_skills_dir": "",
+  "window": {
+    "width": 1400,
+    "height": 900,
+    "min_width": 800,
+    "min_height": 600
+  },
+  "ui": {
+    "theme": "dark",
+    "chat_layout": "full"
+  }
+}

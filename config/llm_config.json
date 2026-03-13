@@ -1,0 +1,21 @@
+{
+  "provider": "ollama",
+  "temperature": 0.7,
+  "providers": {
+    "deepseek": {
+      "model": "deepseek-chat",
+      "api_key": "sk-4f12254ddb464c6786a252a64233a50c",
+      "_type": "builtin"
+    },
+    "ollama": {
+      "model": "qwen3.5:9b",
+      "base_url": "http://192.168.10.123:11434",
+      "_type": "builtin"
+    },
+    "openai": {
+      "model": "gpt-4",
+      "api_key": "",
+      "_type": "builtin"
+    }
+  }
+}
