@@ -34,14 +34,33 @@ class StepStatus(Enum):
     RETRYING = "retrying"     # 重试中
 
 
+class PlanAction(str, Enum):
+    """计划步骤动作类型
+
+    约定常见类型，便于上层统一使用与静态检查。
+    具体 handler 通过 PlanExecutor.register_action_handler 进行绑定。
+    """
+
+    TOOL_CALL = "tool_call"
+    COMMAND = "command"
+    FILE_OPERATION = "file_operation"
+    CUSTOM = "custom"
+
+
 @dataclass
 class StepResult:
     """步骤执行结果"""
     success: bool
     output: str = ""
     error: str = ""
+    # 结构化附加数据；约定常用键：
+    # - "logs": List[str]    该步骤的详细日志
+    # - "artifacts": Dict    生成的工件（文件路径、链接等）
+    # - "_context_update": Dict  用于更新执行上下文
     data: Dict[str, Any] = field(default_factory=dict)
     execution_time: float = 0.0  # 执行耗时（秒）
+    # 是否可重试：如果为 False，则在出错时不再进入重试逻辑
+    retryable: bool = True
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -49,7 +68,8 @@ class StepResult:
             "output": self.output,
             "error": self.error,
             "data": self.data,
-            "execution_time": self.execution_time
+            "execution_time": self.execution_time,
+            "retryable": self.retryable,
         }
 
     @classmethod
@@ -63,7 +83,7 @@ class PlanStep:
     id: str
     name: str
     description: str
-    action: str  # 动作类型: tool_call, command, file_operation, etc.
+    action: str  # 动作类型: PlanAction 值，如 "tool_call" / "command" 等
     params: Dict[str, Any] = field(default_factory=dict)
     status: StepStatus = StepStatus.PENDING
     result: Optional[StepResult] = None
@@ -205,14 +225,21 @@ class PlanExecutor:
 
     def __init__(self, storage: PlanStorage = None):
         self.storage = storage or PlanStorage()
+        # 动作处理器映射：key 为 PlanAction.value 或兼容的字符串
         self._action_handlers: Dict[str, Callable] = {}
         self._current_plan: Optional[ExecutionPlan] = None
         self._stop_requested = False
         self._execution_context: Dict[str, Any] = {}  # 执行上下文，用于步骤间共享数据
 
-    def register_action_handler(self, action: str, handler: Callable) -> None:
-        """注册动作处理器"""
-        self._action_handlers[action] = handler
+    def register_action_handler(self, action: Any, handler: Callable) -> None:
+        """注册动作处理器
+
+        Args:
+            action: PlanAction 或其对应的字符串值。
+            handler: 协程函数，签名为 async def handler(params: Dict[str, Any]) -> StepResult
+        """
+        key = action.value if isinstance(action, PlanAction) else str(action)
+        self._action_handlers[key] = handler
 
     async def execute_plan(
         self,
@@ -336,7 +363,7 @@ class PlanExecutor:
         start_time = asyncio.get_event_loop().time()
 
         try:
-            # 获取动作处理器
+            # 获取动作处理器；兼容 PlanAction 和字符串两种写法
             handler = self._action_handlers.get(step.action)
             if not handler:
                 raise ValueError(f"未找到动作处理器: {step.action}")
@@ -377,11 +404,26 @@ class PlanExecutor:
             step.retry_count += 1
 
             error_msg = str(e)
+            # 默认认为错误是可重试的，除非已有 result 且明确标记为不可重试
+            existing_retryable = (
+                step.result.retryable  # type: ignore[union-attr]
+                if isinstance(step.result, StepResult)
+                else True
+            )
             step.result = StepResult(
                 success=False,
                 error=error_msg,
-                execution_time=execution_time
+                execution_time=execution_time,
+                retryable=existing_retryable,
             )
+
+            # 不可重试的错误，直接标记为失败
+            if not step.result.retryable:
+                step.status = StepStatus.FAILED
+                yield f"❌ 步骤失败（不可重试）: {error_msg}\n"
+                if on_failed:
+                    on_failed(step, step.result)
+                return
 
             if step.retry_count < step.max_retries:
                 step.status = StepStatus.RETRYING
@@ -445,7 +487,11 @@ class PlanManager:
         self,
         name: str,
         description: str,
-        steps_data: List[Dict[str, Any]]
+        steps_data: List[Dict[str, Any]],
+        *,
+        session_id: Optional[str] = None,
+        project_path: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> ExecutionPlan:
         """创建新计划"""
         steps = []
@@ -465,8 +511,15 @@ class PlanManager:
             id=str(uuid.uuid4())[:8],
             name=name,
             description=description,
-            steps=steps
+            steps=steps,
+            metadata=metadata or {},
         )
+
+        # 将会话和项目信息写入 metadata，便于后续按会话/项目筛选和展示
+        if session_id:
+            plan.metadata.setdefault("session_id", session_id)
+        if project_path:
+            plan.metadata.setdefault("project_path", project_path)
 
         self.storage.save(plan)
         self._active_plans[plan.id] = plan

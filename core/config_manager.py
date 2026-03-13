@@ -179,7 +179,6 @@ class ConfigManager:
 
         logger.info(f"添加模型提供商：{provider_id}")
         return True
-        return True
 
     def update_provider(self, provider_id: str, provider_config: dict) -> bool:
         """
@@ -207,10 +206,6 @@ class ConfigManager:
         # 更新配置
         providers[provider_id] = provider_config
         config["providers"] = providers
-        self.save_llm_settings(config)
-
-        logger.info(f"更新模型提供商：{provider_id}")
-        return True
         self.save_llm_settings(config)
 
         logger.info(f"更新模型提供商：{provider_id}")
