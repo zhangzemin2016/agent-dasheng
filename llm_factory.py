@@ -28,6 +28,7 @@ def get_llm(temperature: float):
 
     config = _config.get_llm_config(provider)
     model = config.get("model")
+    baseUrl = config.get("base_url")
 
     if not model:
         raise ValueError(f"LLM 提供商 {provider} 未配置模型名称")
@@ -45,7 +46,7 @@ def get_llm(temperature: float):
         return ChatOllama(
             model=model,
             temperature=temperature,
-            base_url=config.get("base_url"),
+            base_url=baseUrl,
         )
 
     if provider == "openai":
@@ -54,6 +55,7 @@ def get_llm(temperature: float):
             model=model,
             temperature=temperature,
             openai_api_key=config.get("api_key"),
+            openai_api_base=baseUrl,
         )
 
     # 未知 provider，给出明确错误

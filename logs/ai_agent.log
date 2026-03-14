@@ -2135,3 +2135,326 @@
 2026-03-13 16:01:51 - ai_agent.agent.deep_agent - INFO - Chunk类型: tuple, 内容: ('updates', {'TodoListMiddleware.after_model': None})
 2026-03-13 16:01:51 - ai_agent.agent.deep_agent - INFO - chunk_type=updates, data类型=dict
 2026-03-13 16:01:51 - ai_agent.controllers.main - INFO - 已保存会话摘要：fa8de55d
+2026-03-13 17:23:45 - ai_agent - INFO - 日志已初始化：/home/alger/GitRoot/agent-dasheng/logs/ai_agent.log
+2026-03-13 17:23:47 - ai_agent.llm_factory - INFO - 使用 LLM 提供商：ollama
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO - 已加载提示词文件从: /home/alger/GitRoot/agent-dasheng/.agent/prompts
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO - 自定义工具数量: 19
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - 语法检查
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - 依赖分析
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - 代码统计
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git状态
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git提交历史
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git添加文件
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git提交
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git推送
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git拉取
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git分支列表
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git切换分支
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git查看差异
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git克隆
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - Git初始化
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - 获取网页内容
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - 网络搜索
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - HTTP请求
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - 查询维基百科
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO -   - 获取RSS订阅
+2026-03-13 17:23:47 - ai_agent.agent.deep_agent - INFO - DeepAgent 初始化成功
+2026-03-13 17:23:47 - ai_agent.controllers.main - INFO - DeepAgent 初始化成功
+2026-03-13 17:23:47 - ai_agent.storage.database - INFO - 数据库初始化完成: /home/alger/GitRoot/agent-dasheng/.agent/db/myagent.db
+2026-03-13 17:23:47 - ai_agent.controllers.main - INFO - 从存储加载了 1 个历史会话
+2026-03-13 17:23:47 - ai_agent.controllers.main - INFO - 控制器初始化完成
+2026-03-13 17:23:47 - ai_agent.flet_app - INFO - 应用初始化完成
+2026-03-13 17:23:53 - ai_agent.controllers.main - INFO - 已保存会话摘要：fa8de55d
+2026-03-13 17:23:53 - ai_agent.services.session - INFO - 创建新会话：eec5f65b
+2026-03-13 17:23:53 - ai_agent.controllers.main - INFO - 新建会话：eec5f65b
+2026-03-13 17:23:54 - ai_agent.services.session - INFO - 删除会话：fa8de55d
+2026-03-13 17:23:54 - ai_agent.controllers.main - INFO - 删除会话：fa8de55d
+2026-03-13 17:23:54 - ai_agent.storage.database - INFO - 会话已删除: fa8de55d
+2026-03-13 17:24:57 - ai_agent.agent.deep_agent - INFO - 会话 eec5f65b：共 1 条消息，输入: 帮我看下有哪些文件...
+2026-03-13 17:25:10 - ai_agent.agent.deep_agent - ERROR - 流式对话错误:  (status code: 502)
+2026-03-13 17:25:10 - ai_agent.controllers.main - INFO - 已保存会话摘要：eec5f65b
+2026-03-14 09:46:45 - ai_agent - INFO - 日志已初始化：/home/alger/GitRoot/agent-dasheng/logs/ai_agent.log
+2026-03-14 09:46:47 - ai_agent.llm_factory - INFO - 使用 LLM 提供商：ollama
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO - 已加载提示词文件从: /home/alger/GitRoot/agent-dasheng/.agent/prompts
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO - 自定义工具数量: 19
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - 语法检查
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - 依赖分析
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - 代码统计
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git状态
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git提交历史
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git添加文件
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git提交
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git推送
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git拉取
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git分支列表
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git切换分支
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git查看差异
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git克隆
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - Git初始化
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - 获取网页内容
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - 网络搜索
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - HTTP请求
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - 查询维基百科
+2026-03-14 09:46:47 - ai_agent.agent.deep_agent - INFO -   - 获取RSS订阅
+2026-03-14 09:46:48 - ai_agent.agent.deep_agent - INFO - DeepAgent 初始化成功
+2026-03-14 09:46:48 - ai_agent.controllers.main - INFO - DeepAgent 初始化成功
+2026-03-14 09:46:48 - ai_agent.storage.database - INFO - 数据库初始化完成: /home/alger/GitRoot/agent-dasheng/.agent/db/myagent.db
+2026-03-14 09:46:48 - ai_agent.controllers.main - INFO - 从存储加载了 1 个历史会话
+2026-03-14 09:46:48 - ai_agent.controllers.main - INFO - 控制器初始化完成
+2026-03-14 09:46:48 - ai_agent.flet_app - INFO - 应用初始化完成
+2026-03-14 09:46:51 - ai_agent.controllers.main - INFO - 切换到会话：eec5f65b
+2026-03-14 09:46:52 - ai_agent.controllers.main - INFO - 已保存会话摘要：eec5f65b
+2026-03-14 09:46:52 - ai_agent.services.session - INFO - 创建新会话：faa31409
+2026-03-14 09:46:52 - ai_agent.controllers.main - INFO - 新建会话：faa31409
+2026-03-14 09:46:53 - ai_agent.services.session - INFO - 删除会话：eec5f65b
+2026-03-14 09:46:53 - ai_agent.controllers.main - INFO - 删除会话：eec5f65b
+2026-03-14 09:46:53 - ai_agent.storage.database - INFO - 会话已删除: eec5f65b
+2026-03-14 09:46:53 - ai_agent.controllers.main - INFO - 切换到会话：faa31409
+2026-03-14 09:47:01 - ai_agent.agent.deep_agent - INFO - 会话 faa31409：共 1 条消息，输入: 我项目下有哪些文件？...
+2026-03-14 09:47:41 - ai_agent.controllers.main - INFO - 收到停止请求
+2026-03-14 09:47:43 - ai_agent.agent.deep_agent - INFO - 流式响应被取消
+2026-03-14 09:47:43 - ai_agent.controllers.main - INFO - 已保存会话摘要：faa31409
+2026-03-14 09:47:44 - ai_agent - INFO - 日志已初始化：/home/alger/GitRoot/agent-dasheng/logs/ai_agent.log
+2026-03-14 09:47:46 - ai_agent.llm_factory - INFO - 使用 LLM 提供商：ollama
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO - 已加载提示词文件从: /home/alger/GitRoot/agent-dasheng/.agent/prompts
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO - 自定义工具数量: 19
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - 语法检查
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - 依赖分析
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - 代码统计
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git状态
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git提交历史
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git添加文件
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git提交
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git推送
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git拉取
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git分支列表
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git切换分支
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git查看差异
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git克隆
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - Git初始化
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - 获取网页内容
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - 网络搜索
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - HTTP请求
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - 查询维基百科
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO -   - 获取RSS订阅
+2026-03-14 09:47:46 - ai_agent.agent.deep_agent - INFO - DeepAgent 初始化成功
+2026-03-14 09:47:46 - ai_agent.controllers.main - INFO - DeepAgent 初始化成功
+2026-03-14 09:47:46 - ai_agent.storage.database - INFO - 数据库初始化完成: /home/alger/GitRoot/agent-dasheng/.agent/db/myagent.db
+2026-03-14 09:47:46 - ai_agent.controllers.main - INFO - 从存储加载了 1 个历史会话
+2026-03-14 09:47:46 - ai_agent.controllers.main - INFO - 控制器初始化完成
+2026-03-14 09:47:46 - ai_agent.flet_app - INFO - 应用初始化完成
+2026-03-14 09:47:50 - ai_agent.controllers.main - INFO - 已保存会话摘要：faa31409
+2026-03-14 09:47:50 - ai_agent.services.session - INFO - 创建新会话：86439051
+2026-03-14 09:47:50 - ai_agent.controllers.main - INFO - 新建会话：86439051
+2026-03-14 09:47:51 - ai_agent.services.session - INFO - 删除会话：faa31409
+2026-03-14 09:47:51 - ai_agent.controllers.main - INFO - 删除会话：faa31409
+2026-03-14 09:47:51 - ai_agent.storage.database - INFO - 会话已删除: faa31409
+2026-03-14 09:47:52 - ai_agent.controllers.main - INFO - 切换到会话：86439051
+2026-03-14 09:47:58 - ai_agent.agent.deep_agent - INFO - 会话 86439051：共 1 条消息，输入: 我项目下有哪些文件？...
+2026-03-14 09:48:39 - ai_agent.controllers.main - INFO - 已保存会话摘要：86439051
+2026-03-14 09:50:00 - ai_agent - INFO - 日志已初始化：/home/alger/GitRoot/agent-dasheng/logs/ai_agent.log
+2026-03-14 09:50:02 - ai_agent.llm_factory - INFO - 使用 LLM 提供商：ollama
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO - 已加载提示词文件从: /home/alger/GitRoot/agent-dasheng/.agent/prompts
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO - 自定义工具数量: 19
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - 语法检查
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - 依赖分析
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - 代码统计
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git状态
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git提交历史
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git添加文件
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git提交
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git推送
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git拉取
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git分支列表
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git切换分支
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git查看差异
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git克隆
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - Git初始化
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - 获取网页内容
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - 网络搜索
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - HTTP请求
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - 查询维基百科
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO -   - 获取RSS订阅
+2026-03-14 09:50:02 - ai_agent.agent.deep_agent - INFO - DeepAgent 初始化成功
+2026-03-14 09:50:02 - ai_agent.controllers.main - INFO - DeepAgent 初始化成功
+2026-03-14 09:50:02 - ai_agent.storage.database - INFO - 数据库初始化完成: /home/alger/GitRoot/agent-dasheng/.agent/db/myagent.db
+2026-03-14 09:50:02 - ai_agent.controllers.main - INFO - 从存储加载了 1 个历史会话
+2026-03-14 09:50:02 - ai_agent.controllers.main - INFO - 控制器初始化完成
+2026-03-14 09:50:02 - ai_agent.flet_app - INFO - 应用初始化完成
+2026-03-14 09:50:07 - ai_agent.agent.deep_agent - INFO - 会话 86439051：共 1 条消息，输入: 你能做什么？...
+2026-03-14 09:50:23 - ai_agent.agent.deep_agent - INFO - 流式响应被取消
+2026-03-14 09:50:23 - ai_agent.controllers.main - INFO - 已保存会话摘要：86439051
+2026-03-14 09:50:24 - ai_agent - INFO - 日志已初始化：/home/alger/GitRoot/agent-dasheng/logs/ai_agent.log
+2026-03-14 09:50:26 - ai_agent.llm_factory - INFO - 使用 LLM 提供商：openai
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO - 已加载提示词文件从: /home/alger/GitRoot/agent-dasheng/.agent/prompts
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO - 自定义工具数量: 19
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - 语法检查
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - 依赖分析
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - 代码统计
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git状态
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git提交历史
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git添加文件
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git提交
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git推送
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git拉取
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git分支列表
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git切换分支
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git查看差异
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git克隆
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - Git初始化
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - 获取网页内容
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - 网络搜索
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - HTTP请求
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - 查询维基百科
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO -   - 获取RSS订阅
+2026-03-14 09:50:26 - ai_agent.agent.deep_agent - INFO - DeepAgent 初始化成功
+2026-03-14 09:50:26 - ai_agent.controllers.main - INFO - DeepAgent 初始化成功
+2026-03-14 09:50:26 - ai_agent.storage.database - INFO - 数据库初始化完成: /home/alger/GitRoot/agent-dasheng/.agent/db/myagent.db
+2026-03-14 09:50:26 - ai_agent.controllers.main - INFO - 从存储加载了 1 个历史会话
+2026-03-14 09:50:26 - ai_agent.controllers.main - INFO - 控制器初始化完成
+2026-03-14 09:50:26 - ai_agent.flet_app - INFO - 应用初始化完成
+2026-03-14 09:50:29 - ai_agent.controllers.main - INFO - 已保存会话摘要：86439051
+2026-03-14 09:50:29 - ai_agent.services.session - INFO - 创建新会话：c5ea738b
+2026-03-14 09:50:29 - ai_agent.controllers.main - INFO - 新建会话：c5ea738b
+2026-03-14 09:50:30 - ai_agent.services.session - INFO - 删除会话：86439051
+2026-03-14 09:50:30 - ai_agent.controllers.main - INFO - 删除会话：86439051
+2026-03-14 09:50:30 - ai_agent.storage.database - INFO - 会话已删除: 86439051
+2026-03-14 09:50:34 - ai_agent.agent.deep_agent - INFO - 会话 c5ea738b：共 1 条消息，输入: 你能做什么？...
+2026-03-14 09:50:40 - ai_agent.controllers.main - INFO - 已保存会话摘要：c5ea738b
+2026-03-14 09:51:02 - ai_agent.agent.deep_agent - INFO - 会话 c5ea738b：加载历史 2 条
+2026-03-14 09:51:02 - ai_agent.agent.deep_agent - INFO - 会话 c5ea738b：共 3 条消息，输入: 项目下有哪些文件...
+2026-03-14 09:51:04 - ai_agent.agent.deep_agent - INFO - 工具完成: ls
+2026-03-14 09:51:06 - ai_agent.controllers.main - INFO - 已保存会话摘要：c5ea738b
+2026-03-14 11:46:24 - ai_agent - INFO - 日志已初始化：/home/alger/GitRoot/agent-dasheng/logs/ai_agent.log
+2026-03-14 11:46:25 - ai_agent.llm_factory - INFO - 使用 LLM 提供商：openai
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO - 已加载提示词文件从: /home/alger/GitRoot/agent-dasheng/.agent/prompts
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO - 自定义工具数量: 19
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - 语法检查
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - 依赖分析
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - 代码统计
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git状态
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git提交历史
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git添加文件
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git提交
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git推送
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git拉取
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git分支列表
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git切换分支
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git查看差异
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git克隆
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - Git初始化
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - 获取网页内容
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - 网络搜索
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - HTTP请求
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - 查询维基百科
+2026-03-14 11:46:25 - ai_agent.agent.deep_agent - INFO -   - 获取RSS订阅
+2026-03-14 11:46:26 - ai_agent.agent.deep_agent - INFO - DeepAgent 初始化成功
+2026-03-14 11:46:26 - ai_agent.controllers.main - INFO - DeepAgent 初始化成功
+2026-03-14 11:46:26 - ai_agent.storage.database - INFO - 数据库初始化完成: /home/alger/GitRoot/agent-dasheng/.agent/db/myagent.db
+2026-03-14 11:46:26 - ai_agent.controllers.main - INFO - 从存储加载了 1 个历史会话
+2026-03-14 11:46:26 - ai_agent.controllers.main - INFO - 控制器初始化完成
+2026-03-14 11:46:26 - ai_agent.flet_app - INFO - 应用初始化完成
+2026-03-14 11:46:35 - ai_agent.agent.deep_agent - INFO - 会话 c5ea738b：共 1 条消息，输入: 你好，你能调用什么工具？...
+2026-03-14 11:46:42 - ai_agent.controllers.main - INFO - 已保存会话摘要：c5ea738b
+2026-03-14 11:46:52 - ai_agent.agent.deep_agent - INFO - 会话 c5ea738b：加载历史 2 条
+2026-03-14 11:46:52 - ai_agent.agent.deep_agent - INFO - 会话 c5ea738b：共 3 条消息，输入: 看一下当前目录下有什么文件...
+2026-03-14 11:46:54 - ai_agent.agent.deep_agent - INFO - 工具完成：ls, content 长度=2
+2026-03-14 11:46:56 - ai_agent.controllers.main - INFO - 已保存会话摘要：c5ea738b
+2026-03-14 11:49:33 - ai_agent - INFO - 日志已初始化：/home/alger/GitRoot/agent-dasheng/logs/ai_agent.log
+2026-03-14 11:49:35 - ai_agent.llm_factory - INFO - 使用 LLM 提供商：openai
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO - 已加载提示词文件从: /home/alger/GitRoot/agent-dasheng/.agent/prompts
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO - 自定义工具数量: 19
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - 语法检查
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - 依赖分析
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - 代码统计
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git状态
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git提交历史
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git添加文件
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git提交
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git推送
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git拉取
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git分支列表
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git切换分支
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git查看差异
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git克隆
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - Git初始化
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - 获取网页内容
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - 网络搜索
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - HTTP请求
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - 查询维基百科
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO -   - 获取RSS订阅
+2026-03-14 11:49:35 - ai_agent.agent.deep_agent - INFO - DeepAgent 初始化成功
+2026-03-14 11:49:35 - ai_agent.controllers.main - INFO - DeepAgent 初始化成功
+2026-03-14 11:49:35 - ai_agent.storage.database - INFO - 数据库初始化完成: /home/alger/GitRoot/agent-dasheng/.agent/db/myagent.db
+2026-03-14 11:49:35 - ai_agent.controllers.main - INFO - 从存储加载了 1 个历史会话
+2026-03-14 11:49:35 - ai_agent.controllers.main - INFO - 控制器初始化完成
+2026-03-14 11:49:35 - ai_agent.flet_app - INFO - 应用初始化完成
+2026-03-14 11:49:48 - ai_agent.agent.deep_agent - INFO - 会话 c5ea738b：共 1 条消息，输入: 看一下当前目录下有什么文件...
+2026-03-14 11:49:52 - ai_agent.controllers.main - INFO - 已保存会话摘要：c5ea738b
+2026-03-14 11:52:33 - ai_agent - INFO - 日志已初始化：/home/alger/GitRoot/agent-dasheng/logs/ai_agent.log
+2026-03-14 11:52:34 - ai_agent.llm_factory - INFO - 使用 LLM 提供商：openai
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO - 已加载提示词文件从: /home/alger/GitRoot/agent-dasheng/.agent/prompts
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO - 自定义工具数量: 22
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - 列出目录内容
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - 读取文件内容
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - 写入文件
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - 语法检查
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - 依赖分析
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - 代码统计
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git状态
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git提交历史
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git添加文件
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git提交
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git推送
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git拉取
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git分支列表
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git切换分支
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git查看差异
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git克隆
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - Git初始化
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - 获取网页内容
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - 网络搜索
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - HTTP请求
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - 查询维基百科
+2026-03-14 11:52:34 - ai_agent.agent.deep_agent - INFO -   - 获取RSS订阅
+2026-03-14 11:52:35 - ai_agent.agent.deep_agent - INFO - DeepAgent 初始化成功
+2026-03-14 11:52:35 - ai_agent.controllers.main - INFO - DeepAgent 初始化成功
+2026-03-14 11:52:35 - ai_agent.storage.database - INFO - 数据库初始化完成: /home/alger/GitRoot/agent-dasheng/.agent/db/myagent.db
+2026-03-14 11:52:35 - ai_agent.controllers.main - INFO - 从存储加载了 1 个历史会话
+2026-03-14 11:52:35 - ai_agent.controllers.main - INFO - 控制器初始化完成
+2026-03-14 11:52:35 - ai_agent.flet_app - INFO - 应用初始化完成
+2026-03-14 11:52:42 - ai_agent.agent.deep_agent - INFO - 会话 c5ea738b：共 1 条消息，输入: 帮我砍下目录下有什么文件...
+2026-03-14 11:52:47 - ai_agent.controllers.main - INFO - 已保存会话摘要：c5ea738b
+2026-03-14 11:59:31 - ai_agent - INFO - 日志已初始化：/home/alger/GitRoot/agent-dasheng/logs/ai_agent.log
+2026-03-14 11:59:33 - ai_agent.llm_factory - INFO - 使用 LLM 提供商：openai
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO - 已加载提示词文件从: /home/alger/GitRoot/agent-dasheng/.agent/prompts
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO - 自定义工具数量: 19
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - 语法检查
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - 依赖分析
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - 代码统计
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git状态
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git提交历史
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git添加文件
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git提交
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git推送
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git拉取
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git分支列表
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git切换分支
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git查看差异
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git克隆
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - Git初始化
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - 获取网页内容
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - 网络搜索
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - HTTP请求
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - 查询维基百科
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO -   - 获取RSS订阅
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO - 当前项目路径：/home/alger/workspace/test
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO - 已切换工作目录到：/home/alger/workspace/test
+2026-03-14 11:59:33 - ai_agent.agent.deep_agent - INFO - DeepAgent 初始化成功
+2026-03-14 11:59:33 - ai_agent.controllers.main - INFO - DeepAgent 初始化成功
+2026-03-14 11:59:33 - ai_agent.storage.database - INFO - 数据库初始化完成: /home/alger/GitRoot/agent-dasheng/.agent/db/myagent.db
+2026-03-14 11:59:33 - ai_agent.controllers.main - INFO - 从存储加载了 1 个历史会话
+2026-03-14 11:59:33 - ai_agent.controllers.main - INFO - 控制器初始化完成
+2026-03-14 11:59:33 - ai_agent.flet_app - INFO - 应用初始化完成
+2026-03-14 11:59:44 - ai_agent.agent.deep_agent - INFO - 会话 c5ea738b：共 1 条消息，输入: 目录下有哪些文件？...
+2026-03-14 11:59:48 - ai_agent.controllers.main - INFO - 已保存会话摘要：c5ea738b
