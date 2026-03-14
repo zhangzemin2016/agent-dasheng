@@ -183,6 +183,21 @@ class DeepAgentWrapper:
                 tool_name = tool.name if hasattr(tool, 'name') else str(tool)
                 logger.info(f"  - {tool_name}")
 
+            # 获取当前项目路径
+            project_path = _config.get_current_project_path()
+            
+            if project_path:
+                logger.info(f"当前项目路径：{project_path}")
+                # 切换工作目录到项目路径，确保 deepagents 内置工具在正确路径执行
+                import os
+                try:
+                    os.chdir(project_path)
+                    logger.info(f"已切换工作目录到：{project_path}")
+                except Exception as e:
+                    logger.error(f"切换工作目录失败：{e}")
+            else:
+                logger.warning("未设置项目路径，deepagents 内置工具可能无法正常工作")
+
             self.agent = create_deep_agent(
                 model=self.llm,
                 tools=ALL_TOOLS,
@@ -337,9 +352,6 @@ class DeepAgentWrapper:
             # (stream_mode, data) 格式
             return chunk[0], chunk[1]
 
-        logger.debug(f"未知 chunk 格式: {chunk!r}")
-        return None, None
-
     async def _iter_message_chunk(self, data: Any) -> AsyncIterator[str]:
         """
         解析 LLM 消息流 chunk，产出纯文本。
@@ -365,26 +377,41 @@ class DeepAgentWrapper:
         """
         解析工具执行相关的 update chunk，生成用户可读的工具执行结果摘要。
         """
+        logger.debug(f"_iter_update_chunk 收到 data 类型：{type(data)}")
+        logger.debug(f"_iter_update_chunk: data 内容 = {data}")
+        if isinstance(data, dict):
+            logger.debug(f"_iter_update_chunk: data.keys() = {list(data.keys())}")
+            tools_update = data.get("tools")
+            logger.debug(f"_iter_update_chunk: tools_update 类型 = {type(tools_update)}")
+            logger.debug(f"_iter_update_chunk: tools_update 内容 = {tools_update}")
+
         if not isinstance(data, dict):
+            logger.debug(f"_iter_update_chunk: data 不是 dict，跳过")
             return
 
         tools_update = data.get("tools")
+        logger.debug(f"_iter_update_chunk: tools_update = {tools_update}")
+
         if not (isinstance(tools_update, dict) and "messages" in tools_update):
+            logger.debug(f"_iter_update_chunk: tools_update 格式不对，跳过")
             return
 
         for msg in tools_update["messages"]:
             tool_name = getattr(msg, "name", None)
             if not tool_name:
+                logger.debug(f"_iter_update_chunk: 消息没有 tool_name，跳过")
                 continue
 
             display_name = self._get_tool_display_name(tool_name)
-            content = getattr(msg, "content", "")
-            logger.info(f"工具完成: {tool_name}")
+            msg_content = getattr(msg, "content", "")  # 改名避免和外部 content 变量冲突
 
-            if not content:
+            if not msg_content:
+                logger.debug(f"_iter_update_chunk: 工具 {tool_name} 返回空内容")
                 continue
 
-            display_output = str(content)[:500]
+            display_output = str(msg_content)[:500]
+            logger.debug(
+                f"_iter_update_chunk: 产出工具结果，长度={len(display_output)}")
             yield (
                 f"\n✅ {display_name} 完成\n```\n{display_output}\n```\n"
             )
