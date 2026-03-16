@@ -10,7 +10,10 @@ from pathlib import Path
 from typing import AsyncIterator, Dict, Iterable, Optional, Tuple, Union, Any
 
 from deepagents import create_deep_agent
+from deepagents.backends import FilesystemBackend, CompositeBackend, StateBackend, StoreBackend
+
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.store.memory import InMemoryStore
 
 from core.config_manager import get_config_manager
 from llm_factory import get_llm
@@ -85,6 +88,17 @@ def _build_system_prompt() -> str:
     # 如果没有提示词文件，使用默认提示词
     logger.warning("未找到提示词文件，使用默认提示词")
     return DEFAULT_SYSTEM_PROMPT
+
+
+def make_prod_backend(rt):
+    project_path = _config.get_current_project_path()
+    return CompositeBackend(
+        default=StateBackend(rt),                    # 临时笔记
+        routes={
+            "/memories/": StoreBackend(rt),          # 用户记忆
+            "/workspace/": FilesystemBackend(project_path)  # 真实文件
+        }
+    )
 
 
 # 默认系统提示词（备用）
@@ -185,7 +199,7 @@ class DeepAgentWrapper:
 
             # 获取当前项目路径
             project_path = _config.get_current_project_path()
-            
+
             if project_path:
                 logger.info(f"当前项目路径：{project_path}")
                 # 切换工作目录到项目路径，确保 deepagents 内置工具在正确路径执行
@@ -199,11 +213,13 @@ class DeepAgentWrapper:
                 logger.warning("未设置项目路径，deepagents 内置工具可能无法正常工作")
 
             self.agent = create_deep_agent(
+                backend=make_prod_backend,
                 model=self.llm,
                 tools=ALL_TOOLS,
                 system_prompt=system_prompt,
                 checkpointer=self._checkpointer,
                 debug=True,  # 启用调试模式
+                store=InMemoryStore(),
             )
 
             self._is_initialized = True
@@ -380,10 +396,13 @@ class DeepAgentWrapper:
         logger.debug(f"_iter_update_chunk 收到 data 类型：{type(data)}")
         logger.debug(f"_iter_update_chunk: data 内容 = {data}")
         if isinstance(data, dict):
-            logger.debug(f"_iter_update_chunk: data.keys() = {list(data.keys())}")
+            logger.debug(
+                f"_iter_update_chunk: data.keys() = {list(data.keys())}")
             tools_update = data.get("tools")
-            logger.debug(f"_iter_update_chunk: tools_update 类型 = {type(tools_update)}")
-            logger.debug(f"_iter_update_chunk: tools_update 内容 = {tools_update}")
+            logger.debug(
+                f"_iter_update_chunk: tools_update 类型 = {type(tools_update)}")
+            logger.debug(
+                f"_iter_update_chunk: tools_update 内容 = {tools_update}")
 
         if not isinstance(data, dict):
             logger.debug(f"_iter_update_chunk: data 不是 dict，跳过")

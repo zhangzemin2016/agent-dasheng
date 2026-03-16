@@ -223,7 +223,7 @@ class ModelConfigView(ft.Column):
         for provider_id in all_providers:
             is_builtin = provider_id in self.builtin_providers
             is_current = provider_id == current
-            display_name = get_provider_display_name(provider_id)
+            display_name = _config.get_provider_display_name(provider_id)
 
             # 创建列表项
             tile = ft.Container(
@@ -504,7 +504,7 @@ class ModelConfigView(ft.Column):
                 # 如果标识符改变了，需要先删除旧的再添加新的
                 if provider_id != self.current_provider_id:
                     _config.remove_provider(self.current_provider_id)
-                success = update_provider(provider_id, provider_config)
+                success = _config.update_provider(provider_id, provider_config)
                 if not success:
                     self._show_error(f"提供商 {provider_id} 不存在")
                     return
@@ -547,7 +547,7 @@ class ModelConfigView(ft.Column):
             }
 
             # 保存
-            save_llm_settings(new_config)
+            _config.save_llm_settings(new_config)
 
             # 更新全局变量
             global LLM_PROVIDER, LLM_CONFIG
