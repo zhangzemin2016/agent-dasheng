@@ -7,7 +7,7 @@ DeepAgent 封装模块
 import asyncio
 import re
 from pathlib import Path
-from typing import AsyncIterator, Dict, Iterable, Optional, Tuple, Union, Any
+from typing import AsyncIterator, Dict, Optional
 
 from deepagents import create_deep_agent
 from deepagents.backends import FilesystemBackend, CompositeBackend, StateBackend, StoreBackend
@@ -168,9 +168,6 @@ class DeepAgentWrapper:
         self.agent = None
         self._is_initialized = False
         self._stop_requested = False
-        # 使用 MemorySaver 作为 checkpointer，确保工具执行后状态正确保存
-        self._checkpointer = MemorySaver()
-
         # 尝试初始化
         self._initialize()
 
@@ -197,18 +194,6 @@ class DeepAgentWrapper:
                 tool_name = tool.name if hasattr(tool, 'name') else str(tool)
                 logger.info(f"  - {tool_name}")
 
-            # 获取当前项目路径
-            project_path = _config.get_current_project_path()
-
-            if project_path:
-                logger.info(f"当前项目路径：{project_path}")
-                # 切换工作目录到项目路径，确保 deepagents 内置工具在正确路径执行
-                import os
-                try:
-                    os.chdir(project_path)
-                    logger.info(f"已切换工作目录到：{project_path}")
-                except Exception as e:
-                    logger.error(f"切换工作目录失败：{e}")
             else:
                 logger.warning("未设置项目路径，deepagents 内置工具可能无法正常工作")
 
@@ -217,7 +202,6 @@ class DeepAgentWrapper:
                 model=self.llm,
                 tools=ALL_TOOLS,
                 system_prompt=system_prompt,
-                checkpointer=self._checkpointer,
                 debug=True,  # 启用调试模式
                 store=InMemoryStore(),
             )
@@ -275,48 +259,14 @@ class DeepAgentWrapper:
             "configurable": {"thread_id": session_id}
         }
 
+        messages = []
         # 构建当前用户消息
         if project_path:
             current_message = f"{user_input}\n\n[系统信息] 当前项目路径: {project_path}"
         else:
             current_message = user_input
 
-        # 从 checkpointer 获取历史消息
-        messages: list[Dict[str, str]] = []
-        try:
-            state = self._checkpointer.get(config)
-            channel_values = state.get("channel_values") if state else None
-            history: Iterable[Any] = (
-                channel_values.get("messages", []) if channel_values else []
-            )
-
-            for msg in history:
-                content = getattr(msg, "content", None)
-                if not content:
-                    continue
-
-                msg_type = getattr(msg, "type", "")
-                if msg_type == "human":
-                    role = "user"
-                elif msg_type == "ai":
-                    role = "assistant"
-                else:
-                    # 默认按 user 处理，避免异常中断
-                    role = "user"
-
-                messages.append({"role": role, "content": content})
-
-            if messages:
-                logger.info(f"会话 {session_id[:8]}：加载历史 {len(messages)} 条")
-        except Exception as e:  # pragma: no cover - 防御性分支
-            logger.debug(f"获取历史失败: {e}")
-
-        # 添加当前用户消息
         messages.append({"role": "user", "content": current_message})
-
-        # 调试日志
-        logger.info(
-            f"会话 {session_id[:8]}：共 {len(messages)} 条消息，输入: {user_input[:50]}...")
 
         try:
             # 调试: 查看 agent 的工具信息
@@ -326,25 +276,33 @@ class DeepAgentWrapper:
                         logger.info(
                             f"Node {node_name} 工具: {list(node.tools_by_name.keys())}")
 
-            async for chunk in self.agent.astream(
+            async for event in self.agent.astream_events(
                 {"messages": messages},
                 config=config,
-                stream_mode=["messages", "updates"],
+                version="v2",
             ):
                 if self._stop_requested:
                     yield "\n\n[已中断]"
                     break
 
-                chunk_type, data = self._parse_chunk(chunk)
-                if not chunk_type:
+                # 1. 处理 LLM 生成的 token
+                event_type = event.get("event")
+                if not event_type:
                     continue
 
-                if chunk_type == "messages":
-                    async for text in self._iter_message_chunk(data):
-                        yield text
-                elif chunk_type == "updates":
-                    async for text in self._iter_update_chunk(data):
-                        yield text
+                if event_type == "on_chat_model_stream":
+                    chunk = event["data"]["chunk"]
+                    if hasattr(chunk, "content") and isinstance(chunk.content, str):
+                        yield chunk.content
+
+                # 2. 处理工具执行完成的事件
+                elif event_type == "on_tool_end":
+                    tool_name = event["name"]
+                    yield f"\n\n✅ {self._get_tool_display_name(tool_name)} 已完成\n"
+
+                # 3. 处理错误
+                elif event_type == "on_chain_error":
+                    yield f"\n\n❌ 发生错误: {event['data'].get('error')}"
 
         except asyncio.CancelledError:
             logger.info("流式响应被取消")
@@ -352,88 +310,6 @@ class DeepAgentWrapper:
         except Exception as e:
             logger.error(f"流式对话错误: {e}")
             yield f"\n\n❌ 发生错误: {str(e)}"
-
-    @staticmethod
-    def _parse_chunk(
-        chunk: Union[Dict[str, Any], Tuple[Any, Any]]
-    ) -> Tuple[Optional[str], Optional[Any]]:
-        """
-        将 deepagents 返回的 chunk 标准化为 (chunk_type, data)
-        支持 dict 和 (mode, data) 两种格式。
-        """
-        if isinstance(chunk, dict):
-            return chunk.get("type"), chunk.get("data")
-
-        if isinstance(chunk, tuple) and len(chunk) >= 2:
-            # (stream_mode, data) 格式
-            return chunk[0], chunk[1]
-
-    async def _iter_message_chunk(self, data: Any) -> AsyncIterator[str]:
-        """
-        解析 LLM 消息流 chunk，产出纯文本。
-        """
-        # 流式 LLM 输出: (token, metadata)
-        token = data[0] if isinstance(data, tuple) and data else data
-        content = getattr(token, "content", None)
-        if not content:
-            return
-
-        if isinstance(content, str):
-            yield content
-            return
-
-        if isinstance(content, list):
-            for block in content:
-                if isinstance(block, dict) and block.get("type") == "text":
-                    text = block.get("text", "")
-                    if text:
-                        yield text
-
-    async def _iter_update_chunk(self, data: Any) -> AsyncIterator[str]:
-        """
-        解析工具执行相关的 update chunk，生成用户可读的工具执行结果摘要。
-        """
-        logger.debug(f"_iter_update_chunk 收到 data 类型：{type(data)}")
-        logger.debug(f"_iter_update_chunk: data 内容 = {data}")
-        if isinstance(data, dict):
-            logger.debug(
-                f"_iter_update_chunk: data.keys() = {list(data.keys())}")
-            tools_update = data.get("tools")
-            logger.debug(
-                f"_iter_update_chunk: tools_update 类型 = {type(tools_update)}")
-            logger.debug(
-                f"_iter_update_chunk: tools_update 内容 = {tools_update}")
-
-        if not isinstance(data, dict):
-            logger.debug(f"_iter_update_chunk: data 不是 dict，跳过")
-            return
-
-        tools_update = data.get("tools")
-        logger.debug(f"_iter_update_chunk: tools_update = {tools_update}")
-
-        if not (isinstance(tools_update, dict) and "messages" in tools_update):
-            logger.debug(f"_iter_update_chunk: tools_update 格式不对，跳过")
-            return
-
-        for msg in tools_update["messages"]:
-            tool_name = getattr(msg, "name", None)
-            if not tool_name:
-                logger.debug(f"_iter_update_chunk: 消息没有 tool_name，跳过")
-                continue
-
-            display_name = self._get_tool_display_name(tool_name)
-            msg_content = getattr(msg, "content", "")  # 改名避免和外部 content 变量冲突
-
-            if not msg_content:
-                logger.debug(f"_iter_update_chunk: 工具 {tool_name} 返回空内容")
-                continue
-
-            display_output = str(msg_content)[:500]
-            logger.debug(
-                f"_iter_update_chunk: 产出工具结果，长度={len(display_output)}")
-            yield (
-                f"\n✅ {display_name} 完成\n```\n{display_output}\n```\n"
-            )
 
 
 def create_agent(temperature: float = 0.7) -> DeepAgentWrapper:
