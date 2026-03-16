@@ -4,7 +4,7 @@
   "providers": {
     "deepseek": {
       "model": "deepseek-chat",
-      "api_key": "sk-4f12254ddb464c6786a252a64233a50c",
+      "api_key": "",
       "_type": "builtin"
     },
     "ollama": {
@@ -14,7 +14,7 @@
     },
     "openai": {
       "model": "qwen3.5-plus",
-      "api_key": "sk-05005065257445daaa78df7c6610354e",
+      "api_key": "",
       "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
       "_type": "builtin"
     }
