@@ -1,90 +1,51 @@
-"""Agent 工具聚合模块。
+"""
+Agent 工具集
 
-这里集中导出所有提供给 deepagents 使用的 LangChain 工具。
+按功能分类：
+- file_tools: 文件操作（读、写、编辑、删除、复制）
+- directory_tools: 目录操作（列出、创建、删除、移动）
+- command_tools: 命令执行（Shell、Python、脚本）
+- search_tools: 搜索（文件、内容）
 """
 
-from typing import Sequence
+from .file_tools import get_file_tools
+from .directory_tools import get_directory_tools
+from .command_tools import get_command_tools
+from .search_tools import get_search_tools
 
-from .code_tools import analyze_dependencies, check_syntax, code_statistics
-from .git_tools import (
-    git_add,
-    git_branch,
-    git_checkout,
-    git_clone,
-    git_commit,
-    git_diff,
-    git_init,
-    git_log,
-    git_pull,
-    git_push,
-    git_status,
-)
-from .network_tools import (
-    fetch_rss,
-    fetch_webpage,
-    http_request,
-    query_wikipedia,
-    web_search,
-)
+from utils.logger import get_logger
+
+logger = get_logger("agent.tools")
 
 
-def _build_all_tools() -> list:
-    """构建当前可用的工具列表。
-
-    单独封装一层，方便未来按配置开关或动态增减工具。
-    """
-    tools: list = [
-        # 代码分析工具
-        check_syntax,
-        analyze_dependencies,
-        code_statistics,
-        # Git 工具
-        git_status,
-        git_log,
-        git_add,
-        git_commit,
-        git_push,
-        git_pull,
-        git_branch,
-        git_checkout,
-        git_diff,
-        git_clone,
-        git_init,
-        # 网络工具
-        fetch_webpage,
-        web_search,
-        http_request,
-        query_wikipedia,
-        fetch_rss,
-    ]
+def get_all_tools():
+    """获取所有工具"""
+    tools = []
+    
+    # 文件操作工具
+    tools.extend(get_file_tools())
+    logger.debug(f"加载文件工具：{len(get_file_tools())} 个")
+    
+    # 目录操作工具
+    tools.extend(get_directory_tools())
+    logger.debug(f"加载目录工具：{len(get_directory_tools())} 个")
+    
+    # 命令行工具
+    tools.extend(get_command_tools())
+    logger.debug(f"加载命令工具：{len(get_command_tools())} 个")
+    
+    # 搜索工具
+    tools.extend(get_search_tools())
+    logger.debug(f"加载搜索工具：{len(get_search_tools())} 个")
+    
+    logger.info(f"总共加载 {len(tools)} 个工具")
     return tools
 
 
-# 供 deep_agent 使用的统一工具列表
-ALL_TOOLS: Sequence = tuple(_build_all_tools())
-
-__all__ = (
-    [
-        "ALL_TOOLS",
-        "_build_all_tools",
-        "check_syntax",
-        "analyze_dependencies",
-        "code_statistics",
-        "git_status",
-        "git_log",
-        "git_add",
-        "git_commit",
-        "git_push",
-        "git_pull",
-        "git_branch",
-        "git_checkout",
-        "git_diff",
-        "git_clone",
-        "git_init",
-        "fetch_webpage",
-        "web_search",
-        "http_request",
-        "query_wikipedia",
-        "fetch_rss",
-    ]
-)
+__all__ = [
+    "get_all_tools",
+    "get_file_tools",
+    "get_directory_tools",
+    "get_command_tools",
+    "get_search_tools",
+]
