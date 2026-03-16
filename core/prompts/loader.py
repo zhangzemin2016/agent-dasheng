@@ -1,7 +1,6 @@
 """
-提示词加载器 - 从 YAML 模板加载并渲染提示词
-支持环境变量、动态变量、条件分支
-使用 PromptTemplate 对象进行渲染
+提示词加载器 - Prompt Loader
+负责从 YAML 文件加载模板并创建 PromptTemplate 对象
 """
 
 import os
@@ -10,18 +9,152 @@ from typing import Dict, Any, Optional, List
 import yaml
 
 from utils.logger import get_logger
-from .prompt_registry import PromptConfig, PromptTemplate, PromptRegistry
+from .prompt_registry import PromptConfig
 
 logger = get_logger("prompts.loader")
 
 
+class PromptTemplate:
+    """
+    提示词模板 - 最底层，负责模板渲染
+    
+    职责：
+    - 存储模板内容和变量定义
+    - 渲染模板（变量替换、条件块、循环块）
+    - 验证变量
+    
+    不负责：
+    - 从文件加载（这是 PromptLoader 的职责）
+    - 注册管理（这是 PromptRegistry 的职责）
+    """
+
+    def __init__(
+        self,
+        module: str,
+        pattern: str,
+        variables: Optional[Dict[str, Any]] = None,
+        validators: Optional[List[str]] = None
+    ):
+        self.module = module
+        self.pattern = pattern
+        self.variables = variables or {}
+        self.validators = validators or []
+
+    def render(self, **kwargs) -> str:
+        """
+        渲染模板（支持多种变量语法）
+
+        Args:
+            **kwargs: 动态变量
+
+        Returns:
+            渲染后的字符串
+        """
+        import re
+
+        result = self.pattern
+
+        # 合并默认变量和动态变量
+        all_vars = {**self.variables, **kwargs}
+
+        # 1. 环境变量替换：${ENV_VAR} 或 {%ENV_VAR%}
+        env_pattern = r'\$\{(\w+)\}|\{%(\w+)%\}'
+
+        def env_replacer(match):
+            env_var = match.group(1) or match.group(2)
+            return os.environ.get(env_var, match.group(0))
+
+        result = re.sub(env_pattern, env_replacer, result)
+
+        # 2. 动态变量替换：{{variable}} 或 {variable}
+        var_pattern = r'\{\{(\w+)\}\}|\{(\w+)\}'
+
+        def var_replacer(match):
+            var_name = match.group(1) or match.group(2)
+            return str(all_vars.get(var_name, match.group(0)))
+
+        result = re.sub(var_pattern, var_replacer, result)
+
+        # 3. 条件块处理：{%if CONDITION%}...{%endif%}
+        if_pattern = r'\{%if\s+(\w+)\s*%\}(.*?)\{%endif%\}'
+
+        def if_replacer(match):
+            condition_var = match.group(1)
+            content = match.group(2)
+            if all_vars.get(condition_var) or os.environ.get(condition_var):
+                return content
+            return ''
+
+        result = re.sub(if_pattern, if_replacer, result, flags=re.DOTALL)
+
+        # 4. 循环块处理：{%for ITEM in LIST%}...{%endfor%}
+        for_pattern = r'\{%for\s+(\w+)\s+in\s+(\w+)\s*%\}(.*?)\{%endfor%\}'
+
+        def for_replacer(match):
+            item_var = match.group(1)
+            list_var = match.group(2)
+            content = match.group(3)
+            items = all_vars.get(list_var, [])
+            if not items:
+                return ''
+
+            rendered_items = []
+            for item in items:
+                item_content = content.replace(f'{{{item_var}}}', str(item))
+                rendered_items.append(item_content)
+            return '\n'.join(rendered_items)
+
+        result = re.sub(for_pattern, for_replacer, result, flags=re.DOTALL)
+
+        return result
+
+    def validate(self, **kwargs) -> List[str]:
+        """
+        验证变量
+
+        Args:
+            **kwargs: 待验证的变量
+
+        Returns:
+            错误消息列表（空列表表示验证通过）
+        """
+        errors = []
+
+        # 检查必填变量
+        for var_name, var_value in self.variables.items():
+            if var_value is ...:  # Ellipsis 表示必填
+                if var_name not in kwargs:
+                    errors.append(f"Missing required variable: {var_name}")
+
+        # 应用自定义验证规则
+        for validator in self.validators:
+            if validator == 'no_empty_strings':
+                for key, value in kwargs.items():
+                    if isinstance(value, str) and not value.strip():
+                        errors.append(f"Variable '{key}' cannot be empty")
+
+        return errors
+
+
 class PromptLoader:
-    """提示词加载器"""
+    """
+    提示词加载器 - 从 YAML 文件加载模板
+    
+    职责：
+    - 从 YAML 文件读取配置和模板内容
+    - 创建 PromptTemplate 对象
+    - 检查加载条件
+    - 缓存已加载的模板
+    
+    不负责：
+    - 渲染模板（这是 PromptTemplate 的职责）
+    - 注册管理（这是 PromptRegistry 的职责）
+    """
 
     def __init__(self, templates_dir: str = ""):
         self.templates_dir = Path(templates_dir) if templates_dir else Path(__file__).parent / "templates"
-        self.registry = PromptRegistry()
-        self._cache: Dict[str, str] = {}
+        self._cache: Dict[str, PromptTemplate] = {}
+        self._configs: Dict[str, PromptConfig] = {}
 
     def load_template(self, template_name: str, **variables) -> Optional[str]:
         """
@@ -38,7 +171,8 @@ class PromptLoader:
         cache_key = f"{template_name}_{hash(str(sorted(variables.items())))}"
         if cache_key in self._cache:
             logger.debug(f"从缓存加载模板：{template_name}")
-            return self._cache[cache_key]
+            template_obj = self._cache[cache_key]
+            return template_obj.render(**variables)
 
         # 查找 YAML 文件
         template_path = self.templates_dir / f"{template_name}.yaml"
@@ -79,24 +213,21 @@ class PromptLoader:
         # 提取变量定义（如果有）
         variables_def = template_data.get('variables', {})
 
-        # 创建 PromptTemplate 对象并使用其 render 方法
+        # 创建 PromptTemplate 对象
         template_obj = PromptTemplate(
             module=template_name,
             pattern=template_content,
             variables=variables_def
         )
 
-        # 渲染模板（使用 PromptTemplate.render 方法）
-        rendered = template_obj.render(**variables)
-
-        # 缓存结果
-        self._cache[cache_key] = rendered
-
-        # 注册到注册表（同时注册配置和模板对象）
-        self.registry.register(config, template_obj)
+        # 缓存模板对象和配置
+        self._cache[cache_key] = template_obj
+        self._configs[template_name] = config
 
         logger.info(f"已加载模板：{template_name} (v{config.version})")
-        return rendered
+
+        # 渲染并返回
+        return template_obj.render(**variables)
 
     def get_template_object(self, template_name: str) -> Optional[PromptTemplate]:
         """
@@ -108,7 +239,53 @@ class PromptLoader:
         Returns:
             PromptTemplate 对象
         """
-        return self.registry.get_template(template_name)
+        # 尝试从缓存获取
+        for key, template_obj in self._cache.items():
+            if key.startswith(f"{template_name}_"):
+                return template_obj
+
+        # 如果没缓存，先加载
+        if template_name in self._configs or self._load_config(template_name):
+            # 创建一个默认缓存 key
+            cache_key = f"{template_name}_0"
+            if cache_key not in self._cache:
+                # 重新加载以创建模板对象
+                self.load_template(template_name)
+            return self._cache.get(cache_key)
+
+        return None
+
+    def get_config(self, template_name: str) -> Optional[PromptConfig]:
+        """获取配置对象"""
+        return self._configs.get(template_name)
+
+    def _load_config(self, template_name: str) -> bool:
+        """仅加载配置（不创建模板对象）"""
+        template_path = self.templates_dir / f"{template_name}.yaml"
+        if not template_path.exists():
+            template_path = self.templates_dir / f"{template_name}.yml"
+
+        if not template_path.exists():
+            return False
+
+        try:
+            with open(template_path, 'r', encoding='utf-8') as f:
+                template_data = yaml.safe_load(f)
+
+            config_data = template_data.get('config', {})
+            config = PromptConfig(
+                name=config_data.get('name', template_name),
+                version=config_data.get('version', '1.0'),
+                description=config_data.get('description'),
+                conditions=config_data.get('conditions', {}),
+                tags=config_data.get('tags', []),
+                author=config_data.get('author'),
+            )
+            self._configs[template_name] = config
+            return True
+        except Exception as e:
+            logger.error(f"加载配置失败：{e}")
+            return False
 
     def _check_conditions(self, conditions: Dict) -> bool:
         """检查加载条件"""
@@ -147,7 +324,7 @@ class PromptLoader:
 
     def list_templates(self) -> List[str]:
         """列出所有已加载的模板"""
-        return self.registry.list_templates()
+        return list(self._configs.keys())
 
 
 # 全局加载器实例
