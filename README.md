@@ -11,6 +11,7 @@
 - 📜 **规则系统** - 支持内置、全局和项目三级规则配置
 - 🛠️ **丰富工具** - 内置文件操作、代码分析、Git 操作、网络访问等工具
 - 🧠 **DeepAgents 框架** - 深度集成 LangChain 与 LangGraph 的智能体构建框架
+- 📝 **Prompt DSL 系统** - YAML 模板驱动的提示词管理，支持变量插值、条件加载、版本控制
 
 ## 📁 项目结构
 
@@ -41,7 +42,17 @@
 │   ├── config_manager.py   # 配置管理
 │   ├── plan_framework.py   # 计划框架
 │   ├── skill_executor.py   # 技能执行器
-│   └── skill_registry.py   # 技能注册表
+│   ├── skill_registry.py   # 技能注册表
+│   ├── prompt_manager.py   # 提示词管理器（统一入口）
+│   └── prompts/            # Prompt DSL 系统
+│       ├── loader.py       # 模板加载器
+│       ├── prompt_registry.py # 模板注册表
+│       ├── ARCHITECTURE.md # 架构文档
+│       └── templates/      # YAML 模板
+│           ├── role.yaml
+│           ├── capabilities.yaml
+│           ├── tools.yaml
+│           └── task_strategy.yaml
 ├── controllers/            # 控制器层
 │   └── main_controller.py  # 主控制器
 ├── services/               # 服务层
@@ -122,6 +133,70 @@ python main.py
 
 ## 🎯 功能使用
 
+### 📝 Prompt DSL 系统
+
+项目采用自研的 Prompt DSL 系统，将提示词从 Markdown 迁移到 YAML 模板，带来以下优势：
+
+**核心优势**:
+- ✅ **版本控制** - Git diff 清晰，只显示实际变更
+- ✅ **变量插值** - 支持动态变量替换 `{{variable}}`
+- ✅ **条件加载** - 根据环境变量、特性开关动态加载
+- ✅ **模板复用** - 一次定义，多处使用
+- ✅ **调试追踪** - 注册表管理，影响分析更容易
+
+**架构分层**:
+```
+PromptManager（统一入口）
+    ↓
+PromptRegistry（管理层）← 不依赖下层
+    ↓
+PromptLoader（加载层）← 不依赖上层
+    ↓
+PromptTemplate（渲染层）← 最底层，独立
+```
+
+**使用示例**:
+```python
+from core.prompt_manager import get_prompt_manager
+
+# 获取管理器
+manager = get_prompt_manager()
+
+# 构建系统提示词
+system_prompt = manager.build_system_prompt(
+    environment="production",
+    user_preferences="详细模式"
+)
+
+# 或获取模板对象（高级用法）
+template_obj = manager.get_template_object("role")
+rendered = template_obj.render(environment="dev")
+```
+
+**模板语法**:
+```yaml
+config:
+  name: role
+  version: "2.0"
+  description: 角色定义
+
+template: |
+  # 智能助手
+  
+  当前环境：{{environment}}
+  
+  {%if ENABLE_DEBUG%}
+  ## 调试模式
+  调试信息：{{debug_info}}
+  {%endif%}
+  
+  {%for feature in features%}
+  - {{feature}}
+  {%endfor%}
+```
+
+更多信息请查看 [`core/prompts/ARCHITECTURE.md`](core/prompts/ARCHITECTURE.md)
+
 ### 智能对话
 
 - **发送消息**: 在底部输入框输入，按 Enter 发送
@@ -201,6 +276,7 @@ flet pack main.py \
 - **GUI 框架**: [Flet](https://flet.dev/) (基于 Flutter)
 - **AI 框架**: [LangChain](https://langchain.com/) + [LangGraph](https://langchain-ai.github.io/langgraph/)
 - **Agent 框架**: [DeepAgents](https://github.com/langchain-ai/deepagents)
+- **Prompt DSL**: 自研 YAML 模板引擎，支持变量插值、条件块、循环块
 - **代码分析**: Tree-sitter
 - **网络请求**: aiohttp, requests, beautifulsoup4
 
@@ -232,3 +308,12 @@ MIT License
 ---
 
 *最后更新: 2026-03-13*
+## 📚 文档
+
+- [Prompt DSL 架构文档](core/prompts/ARCHITECTURE.md) - 架构设计和最佳实践
+- [Prompt DSL 使用指南](core/prompts/README.md) - 快速开始和示例
+- [迁移指南](core/prompts/MIGRATION_GUIDE.md) - 从 Markdown 迁移到 YAML
+
+---
+
+*最后更新：2026-03-16*
