@@ -47,7 +47,6 @@
 │   └── prompts/            # Prompt DSL 系统
 │       ├── loader.py       # 模板加载器
 │       ├── prompt_registry.py # 模板注册表
-│       ├── ARCHITECTURE.md # 架构文档
 │       └── templates/      # YAML 模板
 │           ├── role.yaml
 │           ├── capabilities.yaml
