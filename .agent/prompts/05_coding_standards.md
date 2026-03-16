@@ -1,10 +1,3 @@
----
-name: 编程规范与架构原则
-description: 各语言编程规范和软件架构设计原则
-priority: 60
-enabled: true
----
-
 # 编程规范与架构原则
 
 ## 通用规范
