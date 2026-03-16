@@ -50,6 +50,13 @@ class DashengAgent:
         self.prompt_manager = get_prompt_manager()
         self.skill_registry = get_skill_registry()
 
+        # 加载工具
+        from .tools import get_all_tools
+        self.tools = get_all_tools()
+
+        # 绑定工具到 LLM（LangChain 工具绑定）
+        self.llm_with_tools = self.llm.bind_tools(self.tools)
+
         # 构建 LangGraph 工作流
         self.graph = self._build_graph()
 
@@ -107,8 +114,12 @@ class DashengAgent:
         """LLM 调用节点"""
         logger.debug(f"LLM 节点，消息数：{len(state['messages'])}")
 
-        # 调用 LLM
-        response = self.llm.invoke(state["messages"])
+        # 调用带工具的 LLM
+        response = self.llm_with_tools.invoke(state["messages"])
+
+        # 检查是否有工具调用
+        if hasattr(response, 'tool_calls') and response.tool_calls:
+            logger.debug(f"LLM 返回工具调用：{len(response.tool_calls)} 个")
 
         return {
             "messages": [response],
@@ -118,13 +129,57 @@ class DashengAgent:
     def _tool_node(self, state: AgentState) -> Dict:
         """工具执行节点"""
         logger.debug("工具执行节点")
-
-        # TODO: 实现工具执行逻辑
-        # 目前先返回空消息，后续完善
-
+        
+        # 获取最后一条 AI 消息，检查工具调用
+        last_message = state["messages"][-1] if state["messages"] else None
+        if not last_message:
+            return {"messages": [AIMessage(content="没有需要执行的操作")]}
+        
+        # 检查是否有工具调用
+        if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+            results = []
+            for tool_call in last_message.tool_calls:
+                result = self._execute_tool_call(tool_call)
+                results.append(result)
+            
+            return {
+                "messages": [AIMessage(content="\n\n".join(results))]
+            }
+        
+        # 如果没有工具调用，返回提示
         return {
-            "messages": [AIMessage(content="工具执行中...")]
+            "messages": [AIMessage(content="未检测到工具调用")]
         }
+    
+    def _execute_tool_call(self, tool_call) -> str:
+        """
+        执行工具调用
+        
+        Args:
+            tool_call: LangChain 工具调用对象
+            
+        Returns:
+            执行结果
+        """
+        from .tools import get_all_tools
+        
+        tool_name = tool_call.get('name', '') if isinstance(tool_call, dict) else getattr(tool_call, 'name', '')
+        tool_args = tool_call.get('args', {}) if isinstance(tool_call, dict) else getattr(tool_call, 'args', {})
+        
+        logger.info(f"执行工具：{tool_name}, 参数：{tool_args}")
+        
+        # 查找工具
+        tools = {tool.name: tool for tool in get_all_tools()}
+        
+        if tool_name not in tools:
+            return f"错误：未找到工具 - {tool_name}"
+        
+        try:
+            # 执行工具
+            result = tools[tool_name].invoke(tool_args)
+            return f"工具 {tool_name} 执行成功:\n{result}"
+        except Exception as e:
+            return f"工具 {tool_name} 执行失败：{str(e)}"
 
     def _skill_node(self, state: AgentState) -> Dict:
         """技能执行节点"""
@@ -144,24 +199,16 @@ class DashengAgent:
         if not last_message:
             return "end"
 
-        content = last_message.content if hasattr(
-            last_message, 'content') else str(last_message)
-
-        # 简单的路由逻辑（后续可以优化）
-        # 检测是否需要调用工具
-        if any(keyword in content.lower() for keyword in ['execute', 'run', 'file', 'git']):
-            logger.debug("路由决策：使用工具")
+        # 检查是否有工具调用（优先）
+        if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+            logger.debug(f"路由决策：使用工具 ({len(last_message.tool_calls)} 个)")
             return "use_tools"
 
-        # 检测是否需要调用技能
+        # 检查是否需要调用技能
+        content = last_message.content if hasattr(last_message, 'content') else str(last_message)
         if any(keyword in content.lower() for keyword in ['/skill', 'skill', '技能']):
             logger.debug("路由决策：使用技能")
             return "use_skills"
-
-        # 检测是否需要继续对话
-        if '?' in content or '？' in content:
-            logger.debug("路由决策：继续对话")
-            return "continue"
 
         # 默认结束
         logger.debug("路由决策：结束")
