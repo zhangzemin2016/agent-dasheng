@@ -50,9 +50,10 @@ class DashengAgent:
         self.prompt_manager = get_prompt_manager()
         self.skill_registry = get_skill_registry()
 
-        # 加载工具
+        # 加载工具（按功能分类）
         from .tools import get_all_tools
         self.tools = get_all_tools()
+        logger.info(f"DashengAgent 加载 {len(self.tools)} 个工具")
 
         # 绑定工具到 LLM（LangChain 工具绑定）
         self.llm_with_tools = self.llm.bind_tools(self.tools)
@@ -166,20 +167,20 @@ class DashengAgent:
         tool_name = tool_call.get('name', '') if isinstance(tool_call, dict) else getattr(tool_call, 'name', '')
         tool_args = tool_call.get('args', {}) if isinstance(tool_call, dict) else getattr(tool_call, 'args', {})
         
-        logger.info(f"执行工具：{tool_name}, 参数：{tool_args}")
+        logger.info(f"🔧 执行工具：{tool_name}")
         
         # 查找工具
         tools = {tool.name: tool for tool in get_all_tools()}
         
         if tool_name not in tools:
-            return f"错误：未找到工具 - {tool_name}"
+            return f"❌ 错误：未找到工具 - {tool_name}"
         
         try:
             # 执行工具
             result = tools[tool_name].invoke(tool_args)
-            return f"工具 {tool_name} 执行成功:\n{result}"
+            return f"✅ {tool_name}:\n{result}"
         except Exception as e:
-            return f"工具 {tool_name} 执行失败：{str(e)}"
+            return f"❌ {tool_name} 失败：{str(e)}"
 
     def _skill_node(self, state: AgentState) -> Dict:
         """技能执行节点"""
