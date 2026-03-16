@@ -1,10 +1,3 @@
----
-name: 技能创建指南
-description: 指导用户创建自定义 Skill 的完整流程
-priority: 50
-enabled: true
----
-
 # 用户对话创建技能
 
 当用户说"帮我创建一个 xxx 技能"、"我想要一个能做 xxx 的 skill"等类似意图时：
@@ -38,6 +31,7 @@ inputs:
 outputs:
   result: 执行结果
 ---
+```
 
 # skill-name
 
@@ -59,7 +53,6 @@ python scripts/run.py --param1 "{param1}"
 ```
 /skill skill-name
 /skill skill-name{param1:值1}
-```
 ```
 
 ## 4. 脚本要求

@@ -1,10 +1,3 @@
----
-name: 核心能力
-description: AI 助手的核心技术能力描述
-priority: 90
-enabled: true
----
-
 # 核心能力
 
 ## 1. 多语言精通
