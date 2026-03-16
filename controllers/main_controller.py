@@ -32,18 +32,18 @@ class MainController:
         self._stop_requested = False
         self._current_plan_id: Optional[str] = None  # 当前执行的计划 ID
 
-        # 初始化 Agent (使用 DeepAgents 框架)
+        # 初始化 Agent (使用自研的 DashengAgent - LangChain + LangGraph)
         try:
             if self._config.is_llm_configured():
                 self.agent = create_agent(temperature=0.7)
                 if self.agent.is_ready:
-                    logger.info("DeepAgent 初始化成功")
+                    logger.info("DashengAgent 初始化成功")
                 else:
-                    logger.warning("DeepAgent 初始化未完成，请检查 LLM 配置")
+                    logger.warning("DashengAgent 初始化未完成，请检查 LLM 配置")
             else:
                 logger.warning("LLM 未配置，无法初始化 Agent")
         except Exception as e:
-            logger.error(f"DeepAgent 初始化失败：{e}")
+            logger.error(f"DashengAgent 初始化失败：{e}")
 
     def init(self):
         """初始化控制器"""
