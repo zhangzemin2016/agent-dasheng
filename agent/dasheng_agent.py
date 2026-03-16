@@ -212,18 +212,24 @@ class DashengAgent:
         logger.info(f"AI 回复：{response[:50]}...")
         return response
     
-    async def stream_chat(self, message: str, project_path: str = ""):
+    async def stream_chat(
+        self,
+        user_input: str,
+        project_path: str = "",
+        session_id: str = "default"
+    ):
         """
         流式处理用户消息（保持 UI 兼容性）
         
         Args:
-            message: 用户消息
+            user_input: 用户消息
             project_path: 项目路径（用于上下文）
+            session_id: 会话 ID
             
         Yields:
             文本块
         """
-        logger.info(f"流式收到消息：{message[:50]}...")
+        logger.info(f"流式收到消息：{user_input[:50]}... (session={session_id})")
         
         # 获取历史消息
         from services.session_service import SessionService
