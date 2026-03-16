@@ -11,8 +11,8 @@
 | 文件 | 功能 | 状态 |
 |------|------|------|
 | `core/prompts/__init__.py` | 模块导出 | ✅ 完成 |
-| `core/prompts/prompt_registry.py` | 注册表核心 | ✅ 完成（从 components 移动） |
-| `core/prompts/loader.py` | 加载器 | ✅ 完成 |
+| `core/prompts/prompt_registry.py` | 注册表核心（含 PromptTemplate） | ✅ 完成 |
+| `core/prompts/loader.py` | 加载器（使用 PromptTemplate 渲染） | ✅ 完成 |
 | `core/prompt_manager.py` | 统一管理器 | ✅ 完成 |
 
 ### 2. YAML 模板
@@ -30,7 +30,8 @@
 |------|------|
 | `README.md` | 使用指南 |
 | `MIGRATION_GUIDE.md` | 迁移指南 |
-| `IMPLEMENTATION_SUMMARY.md` | 本文档 |
+| `IMPLEMENTATION_SUMMARY.md` | 实现总结 |
+| `EXAMPLES.md` | PromptTemplate 使用示例 |
 
 ## 🚀 核心特性
 
@@ -79,6 +80,24 @@ template: |
 template: |
   API 地址：${API_URL}
   调试模式：{%DEBUG_MODE%}
+```
+
+### 6. PromptTemplate 对象
+
+```python
+from core.prompts import get_prompt_loader
+
+loader = get_prompt_loader()
+
+# 获取模板对象（可重复使用）
+template_obj = loader.get_template_object("role")
+
+# 多次渲染不同变量
+dev_prompt = template_obj.render(environment="development")
+prod_prompt = template_obj.render(environment="production")
+
+# 变量验证
+errors = template_obj.validate(required_var="value")
 ```
 
 ## 📊 性能对比

@@ -16,6 +16,8 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.store.memory import InMemoryStore
 
 from core.config_manager import get_config_manager
+from core.prompt_manager import get_prompt_manager
+
 from llm_factory import get_llm
 from utils.logger import get_logger
 from constants.builtin_paths import BuiltinPaths
@@ -78,16 +80,19 @@ def _build_system_prompt() -> str:
     构建完整的系统提示词
     从 .agent/prompts 目录加载提示词文件
     """
-    # 加载内置提示词
-    prompts_content = _load_prompts_from_dir(BuiltinPaths.PROMPT_ROOT)
+    # # 加载内置提示词
+    # prompts_content = _load_prompts_from_dir(BuiltinPaths.PROMPT_ROOT)
 
-    if prompts_content:
-        logger.info(f"已加载提示词文件从: {BuiltinPaths.PROMPT_ROOT}")
-        return prompts_content
+    # if prompts_content:
+    #     logger.info(f"已加载提示词文件从: {BuiltinPaths.PROMPT_ROOT}")
+    #     return prompts_content
 
-    # 如果没有提示词文件，使用默认提示词
-    logger.warning("未找到提示词文件，使用默认提示词")
-    return DEFAULT_SYSTEM_PROMPT
+    # # 如果没有提示词文件，使用默认提示词
+    # logger.warning("未找到提示词文件，使用默认提示词")
+    # return DEFAULT_SYSTEM_PROMPT
+
+    manager = get_prompt_manager()
+    return manager.build_system_prompt()
 
 
 def make_prod_backend(rt):
