@@ -1,6 +1,6 @@
 # Agent Dasheng - AI Agent 桌面应用
 
-基于 Flet、LangChain 和 DeepAgents 的智能 AI Agent 桌面应用，支持智能对话、技能扩展、项目管理和代码分析。
+基于 Flet、LangChain 和 LangGraph 的智能 AI Agent 桌面应用，支持智能对话、技能扩展、项目管理和代码分析。
 
 ## ✨ 特性
 
@@ -9,20 +9,23 @@
 - 🔧 **技能系统** - 可扩展的技能体系，支持全局和项目级技能
 - 📁 **项目管理** - 多项目管理，自动切换项目上下文
 - 📜 **规则系统** - 支持内置、全局和项目三级规则配置
-- 🛠️ **丰富工具** - 内置文件操作、代码分析、Git 操作、网络访问等工具
-- 🧠 **DeepAgents 框架** - 深度集成 LangChain 与 LangGraph 的智能体构建框架
-- 📝 **Prompt DSL 系统** - YAML 模板驱动的提示词管理，支持变量插值、条件加载、版本控制
+- 🛠️ **丰富工具** - 15+ 内置工具（文件/目录/命令/搜索）
+- 🧠 **DashengAgent** - 自研 Agent 框架（LangChain + LangGraph）
+- 📝 **Prompt DSL** - YAML 模板驱动的提示词管理
 
 ## 📁 项目结构
 
 ```
 .
 ├── main.py                 # 应用主入口
-├── llm_factory.py          # LLM 工厂，支持多模型提供商
 ├── agent/                  # Agent 系统
-│   ├── deep_agent.py       # DeepAgent 封装，核心对话逻辑
-│   ├── backends/           # 后端适配器
-│   └── tools/              # Agent 工具集
+│   ├── dasheng_agent.py    # DashengAgent 核心（LangGraph）
+│   ├── deep_agent.py       # DeepAgent 封装（向后兼容）
+│   └── tools/              # 工具集（按功能分类）
+│       ├── file_tools.py   # 文件操作（5 个工具）
+│       ├── directory_tools.py # 目录操作（4 个工具）
+│       ├── command_tools.py   # 命令执行（3 个工具）
+│       ├── search_tools.py    # 搜索功能（3 个工具）
 │       ├── code_tools.py   # 代码分析工具
 │       ├── git_tools.py    # Git 操作工具
 │       └── network_tools.py # 网络访问工具
@@ -43,11 +46,11 @@
 │   ├── plan_framework.py   # 计划框架
 │   ├── skill_executor.py   # 技能执行器
 │   ├── skill_registry.py   # 技能注册表
-│   ├── prompt_manager.py   # 提示词管理器（统一入口）
+│   ├── prompt_manager.py   # 提示词管理器
 │   └── prompts/            # Prompt DSL 系统
 │       ├── loader.py       # 模板加载器
 │       ├── prompt_registry.py # 模板注册表
-│       └── templates/      # YAML 模板
+│       └── templates/      # YAML 模板（精简版）
 │           ├── role.yaml
 │           ├── capabilities.yaml
 │           ├── tools.yaml
@@ -132,69 +135,103 @@ python main.py
 
 ## 🎯 功能使用
 
-### 📝 Prompt DSL 系统
+### 🛠️ 工具系统
 
-项目采用自研的 Prompt DSL 系统，将提示词从 Markdown 迁移到 YAML 模板，带来以下优势：
+内置 **15+ 个工具**，按功能分类，支持自动调用：
+
+### 📁 文件操作（5 个工具）
+
+| 工具名 | 功能 | 示例 |
+|--------|------|------|
+| `read_file` | 读取文件内容 | 读取 README.md |
+| `write_file` | 写入文件 | 创建新文件 |
+| `edit_file` | 编辑文件 | 替换文本 |
+| `delete_file` | 删除文件 | 删除临时文件 |
+| `copy_file` | 复制文件 | 备份文件 |
+
+### 📂 目录操作（4 个工具）
+
+| 工具名 | 功能 | 示例 |
+|--------|------|------|
+| `list_directory` | 列出目录内容 | 查看项目结构 |
+| `create_directory` | 创建目录 | 新建文件夹 |
+| `delete_directory` | 删除目录 | 清理目录 |
+| `move_path` | 移动文件或目录 | 重命名/移动 |
+
+### ⚡ 命令执行（3 个工具）
+
+| 工具名 | 功能 | 示例 |
+|--------|------|------|
+| `execute_command` | 执行 Shell 命令 | 运行代码、安装依赖 |
+| `run_python` | 运行 Python 代码 | 执行代码片段 |
+| `run_script` | 运行脚本文件 | 执行脚本 |
+
+### 🔍 搜索（3 个工具）
+
+| 工具名 | 功能 | 示例 |
+|--------|------|------|
+| `search_files` | 搜索文件 | 查找 *.py 文件 |
+| `search_content` | 搜索文件内容 | grep 功能 |
+| `find_in_files` | 在指定文件中搜索 | 多文件搜索 |
+
+**工具调用示例**：
+```python
+# LLM 自动调用工具
+用户：读取 README.md 文件
+→ 调用 read_file(file_path="README.md")
+→ 返回文件内容
+```
+
+**安全检查**：
+- ✅ 禁止危险命令（rm -rf, sudo 等）
+- ✅ 命令超时保护（默认 30 秒）
+- ✅ 文件操作确认（删除需 confirm=True）
+
+## 📝 Prompt DSL 系统
+
+自研的提示词管理系统，从 Markdown 迁移到 YAML 模板：
 
 **核心优势**:
-- ✅ **版本控制** - Git diff 清晰，只显示实际变更
-- ✅ **变量插值** - 支持动态变量替换 `{{variable}}`
-- ✅ **条件加载** - 根据环境变量、特性开关动态加载
-- ✅ **模板复用** - 一次定义，多处使用
-- ✅ **调试追踪** - 注册表管理，影响分析更容易
+- ✅ **版本控制** - Git diff 清晰
+- ✅ **变量插值** - `{{variable}}`
+- ✅ **条件加载** - 环境变量控制
+- ✅ **模板复用** - 一次定义多处使用
 
 **架构分层**:
 ```
 PromptManager（统一入口）
     ↓
-PromptRegistry（管理层）← 不依赖下层
+PromptRegistry（管理层）
     ↓
-PromptLoader（加载层）← 不依赖上层
+PromptLoader（加载层）
     ↓
-PromptTemplate（渲染层）← 最底层，独立
+PromptTemplate（渲染层）
 ```
 
 **使用示例**:
 ```python
 from core.prompt_manager import get_prompt_manager
 
-# 获取管理器
 manager = get_prompt_manager()
-
-# 构建系统提示词
-system_prompt = manager.build_system_prompt(
-    environment="production",
-    user_preferences="详细模式"
-)
-
-# 或获取模板对象（高级用法）
-template_obj = manager.get_template_object("role")
-rendered = template_obj.render(environment="dev")
+system_prompt = manager.build_system_prompt()
 ```
 
 **模板语法**:
 ```yaml
 config:
   name: role
-  version: "2.0"
-  description: 角色定义
+  version: "3.0"
 
 template: |
   # 智能助手
-  
   当前环境：{{environment}}
   
   {%if ENABLE_DEBUG%}
-  ## 调试模式
-  调试信息：{{debug_info}}
+  调试模式开启
   {%endif%}
-  
-  {%for feature in features%}
-  - {{feature}}
-  {%endfor%}
 ```
 
-更多信息请查看 [`core/prompts/ARCHITECTURE.md`](core/prompts/ARCHITECTURE.md)
+更多信息：[`core/prompts/ARCHITECTURE.md`](core/prompts/ARCHITECTURE.md)
 
 ### 智能对话
 
@@ -274,8 +311,8 @@ flet pack main.py \
 
 - **GUI 框架**: [Flet](https://flet.dev/) (基于 Flutter)
 - **AI 框架**: [LangChain](https://langchain.com/) + [LangGraph](https://langchain-ai.github.io/langgraph/)
-- **Agent 框架**: [DeepAgents](https://github.com/langchain-ai/deepagents)
-- **Prompt DSL**: 自研 YAML 模板引擎，支持变量插值、条件块、循环块
+- **Agent 框架**: DashengAgent（自研，基于 LangGraph）
+- **Prompt DSL**: 自研 YAML 模板引擎
 - **代码分析**: Tree-sitter
 - **网络请求**: aiohttp, requests, beautifulsoup4
 
@@ -309,9 +346,10 @@ MIT License
 *最后更新: 2026-03-13*
 ## 📚 文档
 
-- [Prompt DSL 架构文档](core/prompts/ARCHITECTURE.md) - 架构设计和最佳实践
-- [Prompt DSL 使用指南](core/prompts/README.md) - 快速开始和示例
-- [迁移指南](core/prompts/MIGRATION_GUIDE.md) - 从 Markdown 迁移到 YAML
+- [Prompt DSL 架构](core/prompts/ARCHITECTURE.md) - 架构设计和最佳实践
+- [Prompt DSL 使用指南](core/prompts/README.md) - 快速开始
+- [工具系统调试](agent/README_TOOLS.md) - 工具调用问题排查
+- [迁移指南](core/prompts/MIGRATION_GUIDE.md) - 从 Markdown 到 YAML
 
 ---
 

@@ -130,51 +130,59 @@ class DashengAgent:
     def _tool_node(self, state: AgentState) -> Dict:
         """工具执行节点"""
         logger.debug("工具执行节点")
-        
+
         # 获取最后一条 AI 消息，检查工具调用
         last_message = state["messages"][-1] if state["messages"] else None
         if not last_message:
             return {"messages": [AIMessage(content="没有需要执行的操作")]}
-        
+
         # 检查是否有工具调用
         if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
             results = []
             for tool_call in last_message.tool_calls:
                 result = self._execute_tool_call(tool_call)
                 results.append(result)
-            
+
             return {
                 "messages": [AIMessage(content="\n\n".join(results))]
             }
-        
+
         # 如果没有工具调用，返回提示
         return {
             "messages": [AIMessage(content="未检测到工具调用")]
         }
-    
-    def _execute_tool_call(self, tool_call) -> str:
+
+    def _execute_tool_call(self, tool_call, workdir: str = "") -> str:
         """
         执行工具调用
-        
+
         Args:
             tool_call: LangChain 工具调用对象
-            
+            workdir: 工作目录（项目路径）
+
         Returns:
             执行结果
         """
         from .tools import get_all_tools
-        
-        tool_name = tool_call.get('name', '') if isinstance(tool_call, dict) else getattr(tool_call, 'name', '')
-        tool_args = tool_call.get('args', {}) if isinstance(tool_call, dict) else getattr(tool_call, 'args', {})
-        
-        logger.info(f"🔧 执行工具：{tool_name}")
-        
+
+        tool_name = tool_call.get('name', '') if isinstance(
+            tool_call, dict) else getattr(tool_call, 'name', '')
+        tool_args = tool_call.get('args', {}) if isinstance(
+            tool_call, dict) else getattr(tool_call, 'args', {})
+
+        # 如果是命令执行工具，注入工作目录
+        if tool_name == 'execute_command' and workdir:
+            tool_args['workdir'] = workdir
+            logger.info(f"🔧 执行工具：{tool_name} (workdir={workdir})")
+        else:
+            logger.info(f"🔧 执行工具：{tool_name}")
+
         # 查找工具
         tools = {tool.name: tool for tool in get_all_tools()}
-        
+
         if tool_name not in tools:
             return f"❌ 错误：未找到工具 - {tool_name}"
-        
+
         try:
             # 执行工具
             result = tools[tool_name].invoke(tool_args)
@@ -206,7 +214,8 @@ class DashengAgent:
             return "use_tools"
 
         # 检查是否需要调用技能
-        content = last_message.content if hasattr(last_message, 'content') else str(last_message)
+        content = last_message.content if hasattr(
+            last_message, 'content') else str(last_message)
         if any(keyword in content.lower() for keyword in ['/skill', 'skill', '技能']):
             logger.debug("路由决策：使用技能")
             return "use_skills"
@@ -277,7 +286,15 @@ class DashengAgent:
         Yields:
             文本块
         """
-        logger.info(f"流式收到消息：{user_input[:50]}... (session={session_id})")
+        logger.info(f"流式收到消息：{user_input[:50]}... (session={session_id}, project={project_path or 'default'})")
+
+        # 获取当前项目路径（如果未传入）
+        if not project_path:
+            from services.project_service import ProjectService
+            project_service = ProjectService()
+            project_path = project_service.get_current_project() or ""
+        
+        logger.debug(f"使用项目路径：{project_path}")
 
         # 获取历史消息
         from services.session_service import SessionService
@@ -285,7 +302,6 @@ class DashengAgent:
         session = session_service.get_current_session()
         history = session["messages"] if session else []
 
-        # 调用 LLM 流式接口
         # 转换历史消息为 LangChain 格式
         messages = []
         for msg in history:
@@ -304,13 +320,33 @@ class DashengAgent:
         system_prompt = self.prompt_manager.build_system_prompt()
         messages.insert(0, SystemMessage(content=system_prompt))
 
-        # 流式调用 LLM
+        # 先调用 LLM（带工具绑定）判断是否需要执行工具
         try:
-            async for chunk in self.llm.astream(messages):
-                content = chunk.content if hasattr(
-                    chunk, 'content') else str(chunk)
-                yield content
-                await asyncio.sleep(0.01)  # 小延迟让 UI 更流畅
+            # 使用带工具的 LLM 调用
+            response = await self.llm_with_tools.ainvoke(messages)
+
+            # 检查是否有工具调用
+            if hasattr(response, 'tool_calls') and response.tool_calls:
+                logger.info(f"检测到 {len(response.tool_calls)} 个工具调用")
+
+                # 执行工具（传入项目路径作为工作目录）
+                for tool_call in response.tool_calls:
+                    result = self._execute_tool_call(tool_call, workdir=project_path)
+                    yield f"{result}\n"
+
+                return
+
+            # 没有工具调用，流式输出内容
+            if hasattr(response, 'content') and response.content:
+                content = response.content
+                # 模拟流式输出
+                for i in range(0, len(content), 10):
+                    chunk = content[i:i+10]
+                    yield chunk
+                    await asyncio.sleep(0.01)
+            else:
+                yield "无响应内容"
+
         except Exception as e:
             logger.error(f"流式调用失败：{e}")
             yield f"[错误：{str(e)}]"
