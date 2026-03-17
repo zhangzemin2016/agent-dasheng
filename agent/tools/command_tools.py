@@ -9,6 +9,7 @@ from typing import Optional
 from langchain_core.tools import tool
 
 from utils.logger import get_logger
+from .common import resolve_path
 
 logger = get_logger("agent.tools.command")
 
@@ -29,7 +30,7 @@ DANGEROUS_COMMANDS = [
 ]
 
 
-@tool("执行 Shell 命令")
+@tool
 def execute_command(command: str, timeout: int = 30, workdir: Optional[str] = None, shell: bool = True) -> str:
     """
     执行 Shell 命令
@@ -83,14 +84,15 @@ def execute_command(command: str, timeout: int = 30, workdir: Optional[str] = No
         return f"❌ 错误：{str(e)}"
 
 
-@tool("运行 Python 代码")
-def run_python(code: str, timeout: int = 10) -> str:
+@tool
+def run_python(code: str, timeout: int = 10, workdir: Optional[str] = None) -> str:
     """
     运行 Python 代码片段
 
     Args:
         code: Python 代码
         timeout: 超时时间（秒）
+        workdir: 工作目录（默认当前目录）
 
     Returns:
         执行结果
@@ -107,7 +109,8 @@ def run_python(code: str, timeout: int = 10) -> str:
             ['python3', '-c', code],
             capture_output=True,
             text=True,
-            timeout=timeout
+            timeout=timeout,
+            cwd=workdir
         )
 
         output = ""
@@ -124,33 +127,44 @@ def run_python(code: str, timeout: int = 10) -> str:
         return f"错误：{str(e)}"
 
 
-@tool("运行脚本文件")
-def run_script(script_path: str, args: str = "", timeout: int = 60) -> str:
+@tool
+def run_script(script_path: str, args: str = "", timeout: int = 60, workdir: Optional[str] = None) -> str:
     """
     运行脚本文件
 
     Args:
-        script_path: 脚本路径
+        script_path: 脚本路径（支持相对路径）
         args: 命令行参数
         timeout: 超时时间（秒）
+        workdir: 工作目录（默认当前目录）
 
     Returns:
         执行结果
     """
-    path = Path(script_path)
+    # 解析脚本路径
+    script = resolve_path(script_path, workdir)
 
-    if not path.exists():
+    if not script.exists():
         return f"错误：脚本不存在 - {script_path}"
 
-    if not path.is_file():
+    if not script.is_file():
         return f"错误：不是文件 - {script_path}"
 
     command = f"{script_path} {args}".strip()
 
     return execute_command.invoke({
         "command": command,
-        "timeout": timeout
+        "timeout": timeout,
+        "workdir": workdir
     })
+
+
+# 工具名称映射（用于显示中文名称）
+TOOL_DISPLAY_NAMES = {
+    "execute_command": "执行 Shell 命令",
+    "run_python": "运行 Python 代码",
+    "run_script": "运行脚本文件",
+}
 
 
 def get_command_tools():

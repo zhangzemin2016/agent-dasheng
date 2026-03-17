@@ -11,7 +11,7 @@ from urllib.parse import quote
 from langchain_core.tools import tool
 
 
-@tool("获取网页内容")
+@tool
 def fetch_webpage(url: str, extract_text: bool = True) -> str:
     """
     获取网页内容并提取精要摘要
@@ -100,7 +100,7 @@ def fetch_webpage(url: str, extract_text: bool = True) -> str:
         return f"❌ 获取网页失败：{str(e)}"
 
 
-@tool("网络搜索")
+@tool
 def web_search(query: str, num_results: int = 5) -> str:
     """
     执行网络搜索（使用百度）
@@ -229,7 +229,7 @@ def http_request(
         return f"❌ 请求失败：{str(e)}"
 
 
-@tool("查询维基百科")
+@tool
 def query_wikipedia(search_term: str) -> str:
     """
     查询维基百科条目（支持多语言版本）
@@ -378,3 +378,23 @@ def fetch_rss(feed_url: str, max_entries: int = 10) -> str:
 
     except Exception as e:
         return f"❌ 获取 RSS 失败：{str(e)}"
+
+
+def get_network_tools():
+    """获取所有网络工具"""
+    return [
+        fetch_webpage,
+        web_search,
+        http_request,
+        query_wikipedia,
+        fetch_rss,
+    ]
+
+# 工具名称映射（用于显示中文名称）
+TOOL_DISPLAY_NAMES = {
+    "fetch_webpage": "获取网页内容",
+    "web_search": "网络搜索",
+    "http_request": "HTTP 请求",
+    "query_wikipedia": "查询维基百科",
+    "fetch_rss": "获取 RSS 订阅",
+}

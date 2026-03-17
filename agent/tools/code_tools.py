@@ -12,10 +12,12 @@ import fnmatch
 from typing import Optional
 from pathlib import Path
 from langchain_core.tools import tool
+from .common import resolve_path
 
 
-@tool("语法检查")
-def check_syntax(file_path: str, language: Optional[str] = None) -> str:
+
+@tool
+def check_syntax(file_path: str, language: Optional[str] = None, workdir: Optional[str] = None) -> str:
     """
     检查代码文件的语法正确性
 
@@ -50,15 +52,15 @@ def check_syntax(file_path: str, language: Optional[str] = None) -> str:
 
         # 根据语言选择检查方式
         if language == 'python':
-            return _check_python_syntax(file_path)
+            return _check_python_syntax(file_path_str)
         elif language in ['javascript', 'typescript']:
-            return _check_js_ts_syntax(file_path, language)
+            return _check_js_ts_syntax(file_path_str, language)
         elif language == 'go':
-            return _check_go_syntax(file_path)
+            return _check_go_syntax(file_path_str)
         elif language == 'rust':
-            return _check_rust_syntax(file_path)
+            return _check_rust_syntax(file_path_str)
         elif language == 'java':
-            return _check_java_syntax(file_path)
+            return _check_java_syntax(file_path_str)
         else:
             return f"⚠️ 暂不支持 {language} 的语法检查"
 
@@ -164,8 +166,8 @@ def _check_java_syntax(file_path: str) -> str:
         return f"❌ 检查失败: {str(e)}"
 
 
-@tool("依赖分析")
-def analyze_dependencies(project_path: str, language: Optional[str] = None) -> str:
+@tool
+def analyze_dependencies(project_path: str, language: Optional[str] = None, workdir: Optional[str] = None) -> str:
     """
     分析项目的依赖关系
 
@@ -182,16 +184,16 @@ def analyze_dependencies(project_path: str, language: Optional[str] = None) -> s
 
         # 自动检测语言
         if not language:
-            if os.path.exists(os.path.join(project_path, 'requirements.txt')):
+            if os.path.exists(os.path.join(project_path_str, 'requirements.txt')):
                 language = 'python'
-            elif os.path.exists(os.path.join(project_path, 'package.json')):
+            elif os.path.exists(os.path.join(project_path_str, 'package.json')):
                 language = 'javascript'
-            elif os.path.exists(os.path.join(project_path, 'go.mod')):
+            elif os.path.exists(os.path.join(project_path_str, 'go.mod')):
                 language = 'go'
-            elif os.path.exists(os.path.join(project_path, 'Cargo.toml')):
+            elif os.path.exists(os.path.join(project_path_str, 'Cargo.toml')):
                 language = 'rust'
-            elif os.path.exists(os.path.join(project_path, 'pom.xml')) or \
-                    os.path.exists(os.path.join(project_path, 'build.gradle')):
+            elif os.path.exists(os.path.join(project_path_str, 'pom.xml')) or \
+                    os.path.exists(os.path.join(project_path_str, 'build.gradle')):
                 language = 'java'
 
         if not language:
@@ -200,13 +202,13 @@ def analyze_dependencies(project_path: str, language: Optional[str] = None) -> s
         language = language.lower()
 
         if language == 'python':
-            return _analyze_python_deps(project_path)
+            return _analyze_python_deps(project_path_str)
         elif language == 'javascript':
-            return _analyze_js_deps(project_path)
+            return _analyze_js_deps(project_path_str)
         elif language == 'go':
-            return _analyze_go_deps(project_path)
+            return _analyze_go_deps(project_path_str)
         elif language == 'rust':
-            return _analyze_rust_deps(project_path)
+            return _analyze_rust_deps(project_path_str)
         else:
             return f"⚠️ 暂不支持 {language} 的依赖分析"
 
@@ -334,8 +336,8 @@ def _analyze_rust_deps(project_path: str) -> str:
     return "⚠️ 未找到 Cargo.toml 或依赖信息"
 
 
-@tool("代码统计")
-def code_statistics(path: str, file_pattern: str = "*") -> str:
+@tool
+def code_statistics(path: str, file_pattern: str = "*", workdir: Optional[str] = None) -> str:
     """
     统计代码文件信息（行数、文件数等）
 
@@ -389,7 +391,7 @@ def code_statistics(path: str, file_pattern: str = "*") -> str:
             except:
                 return None
 
-        if os.path.isfile(path):
+        if os.path.isfile(path_str):
             result = analyze_file(path)
             if result:
                 stats['files'] = 1
@@ -398,7 +400,7 @@ def code_statistics(path: str, file_pattern: str = "*") -> str:
                 stats['comment_lines'] = result['comment']
                 stats['blank_lines'] = result['blank']
         else:
-            for root, dirs, files in os.walk(path):
+            for root, dirs, files in os.walk(path_str):
                 dirs[:] = [d for d in dirs if not d.startswith('.') and d not in [
                     'node_modules', '__pycache__', 'venv', '.git', 'target', 'dist', 'build', 'bak']]
 
@@ -431,3 +433,28 @@ def code_statistics(path: str, file_pattern: str = "*") -> str:
 
     except Exception as e:
         return f"❌ 统计时出错: {str(e)}"
+
+
+def get_code_tools():
+    """获取所有代码分析工具"""
+    return [
+        check_syntax,
+        analyze_dependencies,
+        code_statistics,
+    ]
+
+# 工具名称映射（用于显示中文名称）
+TOOL_DISPLAY_NAMES = {
+    "check_syntax": "语法检查",
+    "analyze_dependencies": "依赖分析",
+    "code_statistics": "代码统计",
+}
+
+
+def get_code_tools():
+    """获取所有代码分析工具"""
+    return [
+        check_syntax,
+        analyze_dependencies,
+        code_statistics,
+    ]
