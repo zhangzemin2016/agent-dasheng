@@ -272,24 +272,27 @@ class AIAgentApp:
                 # 追加文本到气泡
                 self.chat_view.append_ai_text(chunk)
 
-                # 更新会话中的消息
-                current_messages = self.controller.session_service.get_current_session()[
-                    "messages"]
-                message_index = len(current_messages) - 1
-                if message_index < len(current_messages):
-                    current_messages[message_index]["content"] += chunk
+                # 更新会话中的消息（LangChain 格式）
+                current_messages = self.controller.session_service.get_messages()
+                if current_messages:
+                    message_index = len(current_messages) - 1
+                    msg = current_messages[message_index]
+                    # AIMessage 对象使用 .content 属性
+                    if hasattr(msg, 'content'):
+                        msg.content += chunk
 
                 # 更新 UI
                 update_ui()
                 await asyncio.sleep(0.01)
 
-            # 标记为完成
-            if self.controller.session_service.get_current_session():
-                current_messages = self.controller.session_service.get_current_session()[
-                    "messages"]
+            # 标记为完成（LangChain 格式）
+            current_messages = self.controller.session_service.get_messages()
+            if current_messages:
                 message_index = len(current_messages) - 1
-                if message_index < len(current_messages):
-                    current_messages[message_index]["completed"] = True
+                msg = current_messages[message_index]
+                # 使用 additional_kwargs 存储完成状态
+                if hasattr(msg, 'additional_kwargs'):
+                    msg.additional_kwargs['completed'] = True
 
             # 隐藏思考动画
             if self.chat_view.current_ai_message:

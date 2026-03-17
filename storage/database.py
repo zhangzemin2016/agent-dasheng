@@ -165,6 +165,22 @@ class SessionRepository:
 
                 # 保存消息
                 for msg in session.get('messages', []):
+                    # 确保 msg 是字典格式
+                    if not isinstance(msg, dict):
+                        # 如果是 LangChain 消息对象，转换为字典
+                        from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, ToolMessage
+                        if isinstance(msg, HumanMessage):
+                            msg = {'role': 'user', 'content': msg.content, 'timestamp': time.time()}
+                        elif isinstance(msg, AIMessage):
+                            msg = {'role': 'assistant', 'content': msg.content, 'timestamp': time.time()}
+                        elif isinstance(msg, SystemMessage):
+                            msg = {'role': 'system', 'content': msg.content, 'timestamp': time.time()}
+                        elif isinstance(msg, ToolMessage):
+                            msg = {'role': 'tool', 'content': msg.content, 'tool_call_id': msg.tool_call_id, 'timestamp': time.time()}
+                        else:
+                            logger.error(f"未知消息类型：{type(msg)}")
+                            continue
+                    
                     cursor.execute("""
                         INSERT INTO messages (session_id, role, content, timestamp)
                         VALUES (?, ?, ?, ?)

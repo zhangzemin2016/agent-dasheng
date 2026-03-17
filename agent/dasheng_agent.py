@@ -6,14 +6,17 @@ import asyncio
 from typing import TypedDict, Annotated, List, Optional, Dict
 import operator
 
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, BaseMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, BaseMessage, ToolMessage
 from langgraph.graph import StateGraph, END
-from langchain_core.tools import tool
 
 from utils.logger import get_logger
 from llm.langchain_factory import get_llm
 from core.prompt_manager import get_prompt_manager
 from core.skill_registry import get_skill_registry
+
+from .tools import get_all_tools
+from .tools.tool_names import get_tool_display_name
+from services.session_service import SessionService
 
 logger = get_logger("agent.dasheng")
 
@@ -49,6 +52,9 @@ class DashengAgent:
         self.llm = get_llm(temperature=temperature)
         self.prompt_manager = get_prompt_manager()
         self.skill_registry = get_skill_registry()
+
+        # 初始化会话服务
+        self.session_service = SessionService()
 
         # 加载工具（按功能分类）
         from .tools import get_all_tools
@@ -163,19 +169,21 @@ class DashengAgent:
         Returns:
             执行结果
         """
-        from .tools import get_all_tools
 
         tool_name = tool_call.get('name', '') if isinstance(
             tool_call, dict) else getattr(tool_call, 'name', '')
         tool_args = tool_call.get('args', {}) if isinstance(
             tool_call, dict) else getattr(tool_call, 'args', {})
 
-        # 如果是命令执行工具，注入工作目录
-        if tool_name == 'execute_command' and workdir:
+        # 获取中文显示名称
+        tool_display_name = get_tool_display_name(tool_name)
+
+        # 给所有工具注入 workdir 参数（如果工具支持）
+        if workdir:
             tool_args['workdir'] = workdir
-            logger.info(f"🔧 执行工具：{tool_name} (workdir={workdir})")
+            logger.info(f"🔧 执行工具：{tool_display_name} (workdir={workdir})")
         else:
-            logger.info(f"🔧 执行工具：{tool_name}")
+            logger.info(f"🔧 执行工具：{tool_display_name}")
 
         # 查找工具
         tools = {tool.name: tool for tool in get_all_tools()}
@@ -186,9 +194,9 @@ class DashengAgent:
         try:
             # 执行工具
             result = tools[tool_name].invoke(tool_args)
-            return f"✅ {tool_name}:\n{result}"
+            return f"✅ {tool_display_name}:\n{result}"
         except Exception as e:
-            return f"❌ {tool_name} 失败：{str(e)}"
+            return f"❌ {tool_display_name} 失败：{str(e)}"
 
     def _skill_node(self, state: AgentState) -> Dict:
         """技能执行节点"""
@@ -241,6 +249,7 @@ class DashengAgent:
         messages = []
         if history:
             for msg in history:
+                logger.debug(f"历史消息：{msg}")
                 role = msg.get("role", "user")
                 content = msg.get("content", "")
 
@@ -286,70 +295,133 @@ class DashengAgent:
         Yields:
             文本块
         """
-        logger.info(f"流式收到消息：{user_input[:50]}... (session={session_id}, project={project_path or 'default'})")
+        logger.info(
+            f"流式收到消息：{user_input[:50]}... (session={session_id}, project={project_path or 'default'})")
 
         # 获取当前项目路径（如果未传入）
         if not project_path:
             from services.project_service import ProjectService
             project_service = ProjectService()
             project_path = project_service.get_current_project() or ""
-        
+
         logger.debug(f"使用项目路径：{project_path}")
 
-        # 获取历史消息
-        from services.session_service import SessionService
-        session_service = SessionService()
-        session = session_service.get_current_session()
-        history = session["messages"] if session else []
-
-        # 转换历史消息为 LangChain 格式
-        messages = []
-        for msg in history:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
-
-            if role == "user":
-                messages.append(HumanMessage(content=content))
-            elif role == "assistant":
-                messages.append(AIMessage(content=content))
+        # 使用 SessionService 获取历史消息
+        session = self.session_service.get_current_session()
+        if session:
+            messages = session["messages"].copy()
+        else:
+            messages = []
 
         # 添加当前消息
         messages.append(HumanMessage(content=user_input))
 
-        # 添加系统提示词
-        system_prompt = self.prompt_manager.build_system_prompt()
-        messages.insert(0, SystemMessage(content=system_prompt))
+        # 添加系统提示词（只在第一条消息时添加）
+        if not any(isinstance(m, SystemMessage) for m in messages):
+            system_prompt = self.prompt_manager.build_system_prompt()
+            messages.insert(0, SystemMessage(content=system_prompt))
 
         # 先调用 LLM（带工具绑定）判断是否需要执行工具
         try:
-            # 使用带工具的 LLM 调用
-            response = await self.llm_with_tools.ainvoke(messages)
+            # 循环处理工具调用，直到 LLM 不再需要调用工具
+            max_iterations = 10  # 防止无限循环
+            iteration = 0
+            use_tools = True  # 标记是否使用工具模式
 
-            # 检查是否有工具调用
-            if hasattr(response, 'tool_calls') and response.tool_calls:
-                logger.info(f"检测到 {len(response.tool_calls)} 个工具调用")
+            while iteration < max_iterations:
+                iteration += 1
 
-                # 执行工具（传入项目路径作为工作目录）
-                for tool_call in response.tool_calls:
-                    result = self._execute_tool_call(tool_call, workdir=project_path)
-                    yield f"{result}\n"
+                try:
+                    # 调用 LLM（根据是否使用工具模式选择不同调用方式）
+                    if use_tools:
+                        response = await self.llm_with_tools.ainvoke(messages)
+                    else:
+                        response = await self.llm.ainvoke(messages)
+                except Exception as llm_error:
+                    # 如果工具模式失败，降级到纯文本模式
+                    if use_tools:
+                        logger.warning(f"工具模式调用失败，降级到纯文本模式：{llm_error}")
+                        use_tools = False
+                        response = await self.llm.ainvoke(messages)
+                    else:
+                        raise llm_error
 
-                return
+                # 检查是否有工具调用
+                if hasattr(response, 'tool_calls') and response.tool_calls:
+                    logger.info(
+                        f"检测到 {len(response.tool_calls)} 个工具调用 (迭代 {iteration}/{max_iterations})")
 
-            # 没有工具调用，流式输出内容
-            if hasattr(response, 'content') and response.content:
-                content = response.content
-                # 模拟流式输出
-                for i in range(0, len(content), 10):
-                    chunk = content[i:i+10]
-                    yield chunk
-                    await asyncio.sleep(0.01)
-            else:
-                yield "无响应内容"
+                    # 执行工具并收集结果
+                    tool_messages = []
+                    for tool_call in response.tool_calls:
+                        tool_name = tool_call.get('name', '') if isinstance(
+                            tool_call, dict) else getattr(tool_call, 'name', '')
+                        try:
+                            result = self._execute_tool_call(
+                                tool_call, workdir=project_path)
+                            yield f"🔧 {tool_name}: {result[:200]}\n" if len(result) > 200 else f"🔧 {tool_name}: {result}\n"
+
+                            # 创建 ToolMessage 返回给 LLM
+                            tool_messages.append(ToolMessage(
+                                content=result,
+                                tool_call_id=tool_call.get('id', '') if isinstance(
+                                    tool_call, dict) else getattr(tool_call, 'id', '')
+                            ))
+                        except Exception as tool_error:
+                            logger.error(f"工具执行失败 {tool_name}: {tool_error}")
+                            tool_messages.append(ToolMessage(
+                                content=f"工具执行失败：{str(tool_error)}",
+                                tool_call_id=tool_call.get('id', '') if isinstance(
+                                    tool_call, dict) else getattr(tool_call, 'id', '')
+                            ))
+
+                    # 把工具调用和结果添加到消息历史
+                    messages.append(response)  # AI 的工具调用
+                    messages.extend(tool_messages)  # 工具执行结果
+
+                    # 继续循环，让 LLM 根据工具结果继续处理
+                    continue
+
+                # 没有工具调用，流式输出内容
+                if hasattr(response, 'content') and response.content:
+                    content = response.content
+                    # 模拟流式输出
+                    for i in range(0, len(content), 10):
+                        chunk = content[i:i+10]
+                        yield chunk
+                        await asyncio.sleep(0.01)
+                else:
+                    yield "无响应内容"
+
+                # 完成，退出循环
+                break
+
+            if iteration >= max_iterations:
+                logger.warning(f"达到最大迭代次数 ({max_iterations})，停止工具调用")
+                yield "\n[⚠️ 已达到最大工具调用次数，请继续提问]"
 
         except Exception as e:
             logger.error(f"流式调用失败：{e}")
             yield f"[错误：{str(e)}]"
+
+    async def _save_messages_to_session(self, messages: List[BaseMessage]):
+        """保存消息到会话（异步）"""
+        try:
+            # 过滤掉系统消息
+            for msg in messages:
+                if isinstance(msg, SystemMessage):
+                    continue
+                elif isinstance(msg, HumanMessage):
+                    self.session_service.add_message("user", msg.content)
+                elif isinstance(msg, AIMessage):
+                    self.session_service.add_message("assistant", msg.content)
+                elif isinstance(msg, ToolMessage):
+                    self.session_service.add_tool_message(
+                        tool_call_id=msg.tool_call_id,
+                        content=msg.content
+                    )
+        except Exception as e:
+            logger.error(f"保存消息失败：{e}")
 
     def chat_sync(self, message: str, history: List[Dict] = None) -> str:
         """同步版本的 chat 方法"""

@@ -9,24 +9,26 @@ from typing import Optional, List
 from langchain_core.tools import tool
 
 from utils.logger import get_logger
+from .common import resolve_path
 
 logger = get_logger("agent.tools.search")
 
 
-@tool("搜索文件")
-def search_files(pattern: str, directory: str = ".", max_results: int = 50) -> str:
+@tool
+def search_files(pattern: str, directory: str = ".", max_results: int = 50, workdir: Optional[str] = None) -> str:
     """
     搜索文件（支持 glob 模式）
 
     Args:
         pattern: 文件模式（如 "**/*.py"）
-        directory: 搜索目录（默认当前目录）
+        directory: 搜索目录（默认当前目录，支持相对路径）
         max_results: 最大结果数
+        workdir: 工作目录/项目路径（相对路径会基于此目录）
 
     Returns:
         匹配的文件列表
     """
-    path = Path(directory)
+    path = resolve_path(directory, workdir)
 
     if not path.exists():
         return f"错误：目录不存在 - {directory}"
@@ -64,21 +66,22 @@ def search_files(pattern: str, directory: str = ".", max_results: int = 50) -> s
 
 
 @tool
-def search_content(pattern: str, directory: str = ".", file_pattern: str = "*", max_results: int = 20, use_regex: bool = False) -> str:
+def search_content(pattern: str, directory: str = ".", file_pattern: str = "*", max_results: int = 20, use_regex: bool = False, workdir: Optional[str] = None) -> str:
     """
     搜索文件内容（类似 grep）
 
     Args:
         pattern: 搜索模式
-        directory: 搜索目录
+        directory: 搜索目录（默认当前目录，支持相对路径）
         file_pattern: 文件模式（如 "*.py"）
         max_results: 最大结果数
         use_regex: 是否使用正则表达式
+        workdir: 工作目录/项目路径（相对路径会基于此目录）
 
     Returns:
         匹配结果
     """
-    path = Path(directory)
+    path = resolve_path(directory, workdir)
 
     if not path.exists():
         return f"错误：目录不存在 - {directory}"
@@ -130,14 +133,15 @@ def search_content(pattern: str, directory: str = ".", file_pattern: str = "*", 
 
 
 @tool
-def find_in_files(pattern: str, files: List[str], use_regex: bool = False) -> str:
+def find_in_files(pattern: str, files: List[str], use_regex: bool = False, workdir: Optional[str] = None) -> str:
     """
     在指定文件中搜索内容
 
     Args:
         pattern: 搜索模式
-        files: 文件路径列表
+        files: 文件路径列表（支持相对路径）
         use_regex: 是否使用正则表达式
+        workdir: 工作目录/项目路径（相对路径会基于此目录）
 
     Returns:
         匹配结果
@@ -145,7 +149,7 @@ def find_in_files(pattern: str, files: List[str], use_regex: bool = False) -> st
     matches = []
 
     for file_path in files:
-        path = Path(file_path)
+        path = resolve_path(file_path, workdir)
         if not path.exists() or not path.is_file():
             continue
 
@@ -173,6 +177,14 @@ def find_in_files(pattern: str, files: List[str], use_regex: bool = False) -> st
         result += f"{file.name}:{line_num}: {line_content}\n"
 
     return result
+
+
+# 工具名称映射（用于显示中文名称）
+TOOL_DISPLAY_NAMES = {
+    "search_files": "搜索文件",
+    "search_content": "搜索内容",
+    "find_in_files": "在文件中搜索",
+}
 
 
 def get_search_tools():

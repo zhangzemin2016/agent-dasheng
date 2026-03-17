@@ -51,7 +51,7 @@ class MainController:
         self.load_all_sessions_from_storage()
 
         # 如果没有历史会话，创建默认会话
-        if not self.session_service.sessions:
+        if not self.session_service.get_current_session():
             self.session_service.create_session()
 
         logger.info("控制器初始化完成")
@@ -297,8 +297,9 @@ class MainController:
         sessions = storage.load_all_sessions()
 
         if sessions:
-            # 将会话添加到服务中
-            self.session_service.sessions = sessions
+            # 将会话添加到服务中（转换为字典索引）
+            for session in sessions:
+                self.session_service.sessions[session["id"]] = session
             # 设置最后一个活动的会话为当前会话
             if sessions:
                 self.session_service.current_session_id = sessions[0]["id"]
